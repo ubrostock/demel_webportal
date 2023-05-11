@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<!--/*
+ * This file is part of the DEMel web application.
+ * 
+ * Copyright 2023
+ * DEMel project team, Rostock University, 18051 Rostock, Germany
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */-->
+ 
+<!--/* model variables: lemma */-->
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org"
+  xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+  <div class="card border border-secondary demel-infobox">
+
+    <div class="card-header py-2">
+      <table class="">
+        <col style="width:12em" />
+        <tr style="background-color:unset">
+          <td class="p-0">
+            <h3 class="mb-0"><span class="text-body" th:text="#{demel.parts.infobox.lemma.title.__${lemma.type}__}"></span></h3>
+          </td>
+          <td class="p-0">
+            <h3 class="mb-0">
+              <span th:class="${lemma.type == 'lemmalink' ? 'text-body' : ''}" th:utext="${lemma.name}"></span>
+              <!--/* <small class="ps-3 text-sm" th:if="${lemma.lemmalink}" th:utext="${lemma.htmlLemmalinks}"></small> */-->
+            </h3>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="card-body py-1">
+      <table class="table table-sm table-borderless mb-0">
+        <col style="width:12em" />
+        <tr class="bg-transparent">
+          <th th:text="#{demel.parts.infobox.lemma.id}">ID:</th>
+          <td th:text="${lemma.id}"></td>
+        </tr>
+        <tr class="bg-transparent" th:unless="${lemma.type == 'linklemma'}">
+          <th th:text="#{demel.parts.infobox.lemma.part_of_speech}">Wortart:</th>
+          <td th:utext="${lemma.htmlPartOfSpeechs}"></td>
+        </tr>
+        <tr class="bg-transparent" th:unless="${#lists.isEmpty(lemma.lemmalinkTargetNames)}">
+          <th th:text="#{demel.parts.infobox.lemma.lemmalink_id}">Verweis:</th>
+          <td th:utext="${lemma.htmlLemmalinks}"></td>
+        </tr>
+        <tr class="bg-transparent" th:unless="${#strings.isEmpty(lemma.hintsExtern)}">
+          <th th:text="#{demel.parts.infobox.lemma.hintsExtern}">Markierung:</th>
+          <td th:utext="${lemma.hintsExtern}"></td>
+        </tr>
+        <tr class="bg-transparent">
+          <th th:text="#{demel.parts.infobox.lemma.attestations}">Belege:</th>
+          <td>
+            <em th:if="${lemma.countAttestations} == 0" th:text="#{demel.parts.infobox.common.attestations.none}">[keine Belege]</em>
+            <div class="clearfix">
+              <a th:if="${lemma.countAttestations} > 0" class='btn btn-primary btn-sm float-end' 
+                 th:title=#{demel.parts.infobox.common.attestations.title.show}  th:href="@{/browse/attestations(used_lemma_object=${lemma.id})}">
+                 <i class='fa-regular fa-eye'></i>
+                 <span th:text="#{demel.parts.infobox.common.attestations.show}">anzeigen</span>
+              </a>
+              <span th:if="${lemma.countAttestations} > 0" class="pe-1" th:text="${lemma.countAttestations}"></span>
+              <span th:if="${lemma.countAttestations} == 1" th:text="#{demel.parts.infobox.common.attestation}">Beleg</span>
+              <span th:if="${lemma.countAttestations} > 1" th:text="#{demel.parts.infobox.common.attestations}">Belege</span>
+            </div>
+            <div th:if="${lemma.countAttestations} > 0" class="text-muted">
+              (&nbsp;<span th:if="${lemma.countAttestationsPrimary > 0}"><span  th:text="${lemma.countAttestationsPrimary}"></span>&nbsp;x&nbsp;<span th:text="#{demel.parts.infobox.lemma.attestations.p}">Primärbeleg</span></span> 
+              <span th:if="${lemma.countAttestationsPrimary > 0 and lemma.countAttestationsSecondary > 0 }"> / </span>
+              <span th:if="${lemma.countAttestationsSecondary > 0}"><span th:text="${lemma.countAttestationsSecondary}"></span>&nbsp;x&nbsp;<span th:text="#{demel.parts.infobox.lemma.attestations.s}">Sekundärbeleg</span></span>
+              <span th:if="${lemma.countAttestationsPrimary + lemma.countAttestationsSecondary > 0 and lemma.countAttestationsLemmalink > 0 }"> / </span>
+              <span th:if="${lemma.countAttestationsLemmalink > 0}"><span th:text="${lemma.countAttestationsLemmalink}"></span>&nbsp;x&nbsp;<span th:text="#{demel.parts.infobox.lemma.attestations.l}">Lemmaverweis</span></span>&nbsp;)
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="card-footer py-1">
+       <table class="w-100">
+         <col style="width:12em" />
+         <tr style="background-color:transparent;">
+           <th th:text="#{demel.parts.infobox.common.citelink}">Zitierlink:</th>
+           <td> 
+             <a class="float-end" title="JSON-Data" th:href="@{/api/data/json/lemmas/__${lemma.id}__}"><i class="fa-solid fa-database text-dark"></i></a>
+             <a th:href="${@environment.getProperty('demel.basepurl')+lemma.id}" th:text="${@environment.getProperty('demel.basepurl')+lemma.id}"></a>
+           </td>
+         </tr>
+       </table>
+    </div>
+  </div>
+</html>

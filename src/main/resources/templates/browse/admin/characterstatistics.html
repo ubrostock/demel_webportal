@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<!--/*
+ * This file is part of the DEMel web application.
+ * 
+ * Copyright 2023
+ * DEMel project team, Rostock University, 18051 Rostock, Germany
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */-->
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org"
+  xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+<title th:text="#{demel.browse.admin.characterstatistics.head.title}">Admin: Zeichenstatisitik</title>
+<meta th:replace="~{fragments/page :: html_header}" />
+</head>
+<body class="ir-body">
+  <nav th:replace="~{fragments/page :: top_navigation}"></nav>
+  <header th:replace="~{fragments/page :: header (navActive='')}"></header>
+  <nav th:replace="~{fragments/page :: navigation (navActive='nav-main-admin')}">...</nav>
+  <main class="ir-main container">
+    <div class="row">
+      <div class="col">
+        <h2 class="text-nowrap" th:text="#{demel.browse.admin.characterstatistics.title}">Administration:
+          Zeichen-Statistik</h2>
+        <div class="dropdown show">
+          <a class="btn btn-primary dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
+            data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+            th:text="#{demel.browse.admin.characterstatistics.dropdown}"> Bitte Feld wählen ... </a>
+          <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+            <a class="dropdown-item" th:href="@{/browse/admin/charstats(query='doctype:sigle', field='s__name')}"
+              th:text="#{demel.browse.admin.characterstatistics.dropdown.sigle}"> Sigle</a> <a class="dropdown-item"
+              th:href="@{/browse/admin/charstats(query='doctype:lemma', field='l__name')}"
+              th:text="#{demel.browse.admin.characterstatistics.dropdown.lemma}"> Lemma</a> <a class="dropdown-item"
+              th:href="@{/browse/admin/charstats(query='doctype:attestation', field='d__form')}"
+              th:text="#{demel.browse.admin.characterstatistics.dropdown.attestation}"> Belegte Form</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row" th:unless="${#strings.isEmpty(query) and #strings.isEmpty(field)}">
+      <div class="col pt-4">
+        <h3 th:text="#{demel.browse.admin.characterstatistics.result.title}">Ergebnis:</h3>
+        <div class="alert alert-info w-50">
+          <span class="fw-bold" th:text="#{demel.browse.admin.characterstatistics.result.solr.query}">SOLR-Anfrage:</span>
+          <span class="" th:text=${query}></span> <span class="ms-5 fw-bold"
+            th:text="#{demel.browse.admin.characterstatistics.result.field}">Feld:</span> <span class=""
+            th:text=${field}></span>
+        </div>
+        <table class="table table-sm table-striped mt-3">
+          <tr>
+            <th th:text="#{demel.browse.admin.characterstatistics.result.table.sign}">Zeichen</th>
+            <th th:text="#{demel.browse.admin.characterstatistics.result.table.anz}">#Anz</th>
+            <th th:text="#{demel.browse.admin.characterstatistics.result.table.example}">Beispiele (max 10)</th>
+          </tr>
+          <tr th:each="entry : ${data}">
+            <td class="text-nowrap"><span style="min-width: 1.5em; display: inline-block" th:text="${entry.key}">keyvalue</span>
+              [<a target="_blank" th:href="@{'https://unicode-table.com/de/'+${entry.value.hex}}"
+              th:title="${entry.value.unicodeName}"> U+<span th:text="${entry.value.hex}"></span></a>]</td>
+            <td style="text-align: right;" th:text="${entry.value.count}">num</td>
+            <td><span th:each="ex: ${entry.value.first10Values}"> [<a target="_blank"
+                th:href="@{${@environment.getProperty('demel.basepurl')}+${#strings.substringBefore(ex, '|')}}"
+                th:text="${#strings.substringAfter(ex, '|')}"> </a>],
+            </span></td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </main>
+  <script th:replace="~{fragments/page :: script_footer}"></script>
+  <script type="text/javascript" th:inline="javascript">
+    documentReady(function() {
+      initPopovers();
+    });
+  </script>
+</body>
+</html>

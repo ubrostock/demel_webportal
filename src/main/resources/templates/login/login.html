@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<!--/*
+ * This file is part of the DEMel web application.
+ * 
+ * Copyright 2023
+ * DEMel project team, Rostock University, 18051 Rostock, Germany
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */-->
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org"
+  xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+<title th:text="#{demel.login.title}"></title>
+<meta th:replace="~{fragments/page :: html_header}" />
+</head>
+<body class="ir-body">
+  <nav th:replace="~{fragments/page :: top_navigation}"></nav>
+  <header th:replace="~{fragments/page :: header (navActive='')}"></header>
+  <nav th:replace="~{fragments/page :: navigation (navActive='')}">...</nav>
+  <main class="ir-main container">
+    <h2 th:text="#{demel.login.heading}">Anmeldung</h2>
+    <div class="row">
+      <div class="col-6 offset-3">
+        <div class="alert alert-info mx-3" th:utext="#{demel.login.info}">Anmeldung nur für DEMel-Redakteure</div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-6 offset-3">
+        <div class="card">
+          <div class="card-body">
+            <form id="login_form" th:action="@{/login}" method="post">
+              <div class="mb-3">
+                <input class="form-control" type="text" name="username" th:placeholder="#{demel.login.placeholder.user}" />
+              </div>
+              <div class="mb-3">
+                <input id="password_plain" class="form-control" name="password" type="password" th:placeholder="#{demel.login.placeholder.password}" />
+              </div>
+              <div class="mb-3">
+                <a class="btn btn-link float-end" th:href="@{/admin/login/password}" th:text="#{demel.login.button.password_reset}">Passwort
+                  vergessen</a>
+                <button id="submit_button" class="btn btn-primary" type="submit" name="do_login" th:text="#{demel.login.button.login}">Login</button>
+              </div>
+              <div class="alert alert-danger mt-3" th:if="${param.error}"
+                th:utext="#{demel.login.error_message.failed}"></div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <footer th:replace="~{fragments/page :: footer}"></footer>
+  <script th:replace="~{fragments/page :: script_footer}"></script>
+  <script type="text/javascript" th:inline="javascript">
+    documentReady(function() {
+      document.getElementById('login_form').onsubmit = function (evt) {
+        document.getElementById("submit_button").disabled = true;
+        document.getElementById("submit_button").textContent = /*[[#{demel.common.form.submit.wait}]]*/"";
+      };
+    });
+  </script>
+</body>
+</html>

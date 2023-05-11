@@ -1,0 +1,8 @@
+#
+# robots.txt for https://demel.uni-rostock.de
+# ===========================================
+#
+#
+# Block API-Access for all bots
+User-agent: *
+Disallow: /api

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<!--/*
+ * This file is part of the DEMel web application.
+ * 
+ * Copyright 2023
+ * DEMel project team, Rostock University, 18051 Rostock, Germany
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */-->
+ 
+<!--/* parameter:
+ cbt = CheckboxTreeObjecte
+ name = name-Attribute des Input-Elements 
+ form = Name des Formulars
+ objectType= Type des Objektes, z.B. 'lemma' */-->
+<section  th:fragment="checkboxtree"
+  th:id="${'checkboxtree_'+name}">
+  <input th:id="${'last_'+name}" th:name="${'last_'+name}" value="" type="hidden" />
+  <section th:insert="~{:: checkboxtree_item}" th:with="cbtitems=${cbt.items}, name=${name}, objectType=${objectType}"></section>
+  <script th:inline="text">
+    function checkboxClicked_[[${name}]](input) {
+      document.querySelector('#last_[[${name}]]').value = input.value;
+      document.[[${form}]].submit();
+    }
+    document.querySelectorAll('#checkboxtree_[[${name}]] .cbt-indeterminate').forEach((x) => {x.indeterminate = true});
+  </script>
+</section>
+
+<!--/* parameter: cbtitems, name, objectType */-->
+<th:block th:fragment="checkboxtree_item">
+  <div class="ms-3" th:each="item : ${cbtitems}" th:if="${cbtitems}">
+    <div class="form-check clearfix" th:with="doubleBlank=${'__'}">
+    
+      <input type="checkbox" th:id="${'cb_' + item.id}" class="form-check-input" 
+             th:classappend="${item.checked == null} ? 'cbt-indeterminate'"
+             th:name="${name}" th:value="${item.id}" th:onclick="@{'checkboxClicked_' + '__${name}__' + '(this);'}" th:checked="${item.checked}">
+      <label class="form-check-label" style="cursor:pointer" th:for="${'cb_' + item.id}" 
+             th:text="#{demel.vocabulary.__${objectType}____${doubleBlank}____${name}__.__${item.id}__.abbr}" 
+             th:title="#{demel.vocabulary.__${objectType}____${doubleBlank}____${name}__.__${item.id}__.term}" 
+             th:classappend="${#strings.endsWith(item.id,'_all') ? 'font-italic' : ''}"></label>
+      <span th:id="${'facet-'+name+'-'+item.id}" class="badge text-muted float-end text-end px-0" style="min-width: 2.75em;">0</span>
+      <!--/* 
+      <span class="badge float-end px-1">/</span>
+      <span th:id="${'facet-selected-'+name+'-'+item.id}" class="badge text-primary float-end text-end px-0" style="min-width: 2.75em;">0</span>
+       */-->
+    </div>
+    <section th:if="${item.items}" th:insert="~{:: checkboxtree_item}" th:with="cbtitems=${item.items}, name=${name}"></section>
+  </div>
+</th:block>
+
+<!--/* parameter:
+ name = Name des Select-Feldes
+ value = Wert des Select-Feldes 
+ symbol = Symbol für Wert, optional
+ symbol_css = CSS-Konfiguration für Symbol, optional
+ badge_css = CSS-Konfiguration für Symbol, optional
+ form = Name des Formulars 
+ i18nPrefix = Anfang vom i18n key, optional
+ */--> 
+<div th:fragment="checkbox4facet" class="demel-checkbox d-flex justify-content-between" >
+  <div class="form-check">
+    <input th:id="'__${name}__-__${value}__'" class="form-check-input" type="checkbox" th:name="'__${name}__'" th:value="${value}"
+           th:checked="${#lists.contains(__${name}__, '__${value}__')}" th:onclick="'document.__${form}__.submit();'">
+    <label th:unless="${i18nPrefix}" class="form-check-label" th:for="__${name}__-__${value}__" style="cursor:pointer"
+           th:utext="#{demel.__${form}__.filter.__${name}__.checkbox.__${value}__}"></label> 
+    <label th:if="${i18nPrefix}" class="form-check-label" th:for="__${name}__-__${value}__" style="cursor:pointer"
+           th:utext="#{'__${i18nPrefix}__.__${value}__.term'}"></label>
+  </div> 
+  <div class="d-flex flex-row-reverse">
+    <span th:id="facet-__${name}__-__${value}__" class="badge text-muted float-end text-end px-0" 
+          th:style="'position: relative; __${#strings.defaultString(badge_css, '')}__'">&nbsp;</span>
+    <span th:if="${symbol}" class="demel-search-filter-symbol"  
+          th:style="'position: relative; __${#strings.defaultString(symbol_css, '')}__'"
+          th:text="${#strings.defaultString(symbol,'')}">🄿</span> 
+  </div>
+</div>
+
+<!--/* parameter:
+ name = Name des Select-Feldes
+ form = Name des Formulars  */-->
+<div th:fragment="filter_card_header (name, form)" class="card-header d-flex flex-row py-0 px-2">
+   <button class="btn btn-small btn-link text-dark pt-1 ps-0 pe-2" type="button"
+          data-bs-html="true" data-bs-placement="left"
+          th:data-bs-title="#{demel.__${form}__.filter.__${name}__.info.title}"
+          th:data-bs-content="#{demel.__${form}__.filter.__${name}__.info.content}" data-bs-toggle="popover-help">
+          <i class="fa-regular fa-circle-question"></i>
+   </button>
+         
+  <h4 class="d-inline flex-fill pt-2" th:text="#{demel.__${form}__.filter.__${name}__.title}"></h4>
+  <button class="btn btn-sm btn-link pt-0 pe-0" type="submit" name="action" th:value="'del:__${name}__:*'"
+          th:title="#{demel.common.clear_form}">
+          <i class="fa-solid fa-trash-can"></i>
+  </button>
+</div>
+
+<!--/* parameter:
+ i18nPrefix = Anfang vom i18n key*/-->
+ <label th:fragment="form_label_with_info (i18nPrefix)" class="form-label fw-bold d-flex">
+   <span class="text-dark pe-2" style="cursor: pointer;"
+         data-bs-html="true" data-bs-placement="left"
+         th:data-bs-title="#{__${i18nPrefix}__.info.title}"
+         th:data-bs-content="#{__${i18nPrefix}__.info.content}" data-bs-toggle="popover-help">
+     <i class="fa-regular fa-circle-question"></i>
+   </span>
+   <span th:text="#{__${i18nPrefix}__}"></span>
+ </label>
+ 
+ <!--/* parameter:
+ form = Name des Formulars  */-->
+<div th:fragment="message_filter(form)">
+  <div class="card border border-secondary mt-3" sec:authorize="hasRole('ROLE_MESSAGEEDITOR')">
+    <div class="card-body px-2 text-info">
+      <div th:replace="~{fragments/form :: checkbox4facet (name='filter', value='messages_published', form='__${form}__')}"></div>
+      <div th:replace="~{fragments/form :: checkbox4facet (name='filter', value='messages_inreview',  form='__${form}__')}"></div>
+      <div th:replace="~{fragments/form :: checkbox4facet (name='filter', value='messages_all',       form='__${form}__')}"></div>
+    </div>
+  </div>
+</div>
+
+  <script th:fragment="bookmark_url_javascript" type="text/javascript" th:inline="javascript">
+     function copy2Clipboard(){
+      let i18nBookmarkURLCopySuccess = /*[[#{demel.common.bookmark_url.copy.success}]]*/"";  
+      let input = document.getElementById('input_bookmark_url');
+      input.select();
+      document.execCommand("copy");
+      alert(i18nBookmarkURLCopySuccess);
+    }
+    
+    function showBookmarkURL(url){
+    	  let i18nBookmarkURLTitle = /*[[#{demel.common.bookmark_url.title}]]*/"";
+    	  let i18nBookmarkURLButtonTooltip = /*[[#{demel.common.bookmark_url.copy.tooltip}]]*/"";
+    	  let i18nBookmarkURLInfo = /*[[#{demel.common.bookmark_url.info}]]*/"";
+    	  
+    	  document.querySelectorAll("#demel-show-data" .alert).forEach(x => x.remove());
+    	
+      	  let alert=`<div class="alert alert-info alert-dismissible" role="alert">
+    		           <h4>${i18nBookmarkURLTitle}</h4>
+    		           <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    		           <div class="input-group">
+    		            <input id="input_bookmark_url" type="text" class="form-control" placeholder="bookmark URL" value="${url}" readonly />
+    		            <button class="btn btn-secondary" type="button" title="${i18nBookmarkURLButtonTooltip}"
+    		                    onclick="copy2Clipboard();">
+    		              <i class="fa-solid fa-copy"></i>
+    		            </button>
+        		       </div>
+        		       <div class="d-flex align-items-start mt-2">
+        		         <div class="align-self-center small" style="font-size:2.5em"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        		         <div class="align-self-center small ms-3">${i18nBookmarkURLInfo}</div>
+        		       </div>
+                     </div>`;
+          
+		  document.getElementById("demel-show-data").insertAdjacentHTML("afterbegin", alert);
+    }
+  </script>

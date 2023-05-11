@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<!--/*
+ * This file is part of the DEMel web application.
+ * 
+ * Copyright 2023
+ * DEMel project team, Rostock University, 18051 Rostock, Germany
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */-->
+ <div xmlns:th="http://www.thymeleaf.org">
+  <a class="float-end demel-cite-btn-json" th:title="#{demel.popover.cite.json_data}"
+     th:href="@{/api/data/json/lemmas/__${lemma.id}__}">
+     <i class="fa-solid fa-database text-dark"></i>
+  </a>
+  <strong th:text="#{demel.popover.cite.citelink}">Zitierlink</strong>
+  <div class="ms-2">
+    <a th:href="${@environment.getProperty('demel.basepurl') + lemma.id}">
+       http://purl.uni-rostock.de<br />/demel/<span th:text="${lemma.id}">l1234</span></a>
+  </div> 
+  <strong th:text="#{demel.popover.cite.citation}">Zitierweise</strong>
+  <div class="ms-2 condensed">
+     <span th:text="#{demel.vocabulary.lemma\_\_type.__${lemma.type}__.term}"></span>
+     <span th:text="${lemma.id}">l1234</span>
+     „<span th:text="${lemma.name}">Lemma-Name</span>“<br />
+     <span th:text="#{demel.popover.cite.in}"></span>
+     <span th:text="#{demel.vocabulary.demel}">Diccionario del Español Medieval electrónico</span>, <br />
+     <span th:text="${@environment.getProperty('demel.basepurl')}"></span><span th:text="${lemma.id}">l1234</span>, <br />
+     <span th:text="#{demel.popover.cite.download_time}">abgerufen am</span> 
+     <span th:with="format=#{demel.common.date.format}" th:text="${#dates.format(#dates.createNow(), format)}"></span>
+  </div>
+</div> 

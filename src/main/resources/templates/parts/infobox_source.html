@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<!--/*
+ * This file is part of the DEMel web application.
+ * 
+ * Copyright 2023
+ * DEMel project team, Rostock University, 18051 Rostock, Germany
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */-->
+ 
+<!--/* model variables: source */-->
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org"
+  xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+  <div class="card border border-secondary demel-infobox">
+
+    <div class="card-header py-2">
+     <h3 class="mb-0">
+      <span style="width:9.25em" class="d-inline-block text-body"
+            th:text="#{demel.parts.infobox.source.title}">Bibliographieeintrag:</span>
+      <span th:utext="${source.name}"></span>
+     </h3>
+    </div>
+    <div class="card-body py-1">
+      <table class="table table-sm table-borderless mb-0">
+      <col style="width:12em" />
+      <tr class="bg-transparent">
+          <th th:text="#{demel.parts.infobox.source.id}">ID:</th>
+          <td th:text="${source.id}"></td>
+      </tr>
+      <tr class="bg-transparent" th:unless="${#lists.isEmpty(source.editions)}">
+          <th th:text="#{demel.parts.infobox.source.editions}">Edition(en):</th>
+          <td>
+            <div class="pe-1" style="max-height:222px;overflow-y:auto;overflow-x:hidden">
+              <div th:each="ed,ed_stats :${source.editions}">
+                <span th:text="${ed.titleInfo}"></span>
+                  <a th:unless="${#strings.isEmpty(ed.bneId)}" 
+                   th:href="#{demel.parts.infobox.source.persons.url.bne(${ed.bneId})}" 
+                   th:title="#{demel.parts.infobox.source.persons.tooltip.bne}">
+                   <img th:src="@{/images/external_ids/bne_logo.svg}" style="height:1.5em"></img>
+                </a>
+                <div th:unless="${#strings.isEmpty(ed.sourceHostId)}" class="ms-3">
+                  <small class="ms-1"><strong th:text="#{demel.parts.infobox.source.edition.source_host}">erschienen in:</strong></small>
+                  <span th:utext="${ed.sourceHostSigle}"></span>
+                  <span class="h4" style="cursor:pointer" data-bs-html="true"  data-bs-content=" " data-bs-toggle="popover-info"
+                        data-object-type="source" th:data-object-id="${ed.sourceHostId}">
+                        <i class="fa-regular fa-eye"></i></span>
+                </div>
+                <div th:unless="${#lists.isEmpty(ed.reproductions)}" class="ms-3">
+                  <small class="ms-1"><strong th:text="#{demel.parts.infobox.source.edition.reproductions}">erschienen in:</strong></small>
+                  <table class="table table-sm">
+                    <colgroup>
+                      <col style="width:2em">
+                      <col style="width:auto">
+                    </colgroup>
+                    <tr th:each="repro: ${ed.reproductions}" class="pe-3 bg-transparent" >
+                      <td>
+                        <span class="pe-1" th:if="${repro.access=='free'}" th:title="#{demel.vocabulary.reproduction\_\_access.__${repro.access}__.term}">
+                          <i class="fa-solid fa-lock-open"></i>
+                        </span>
+                        <span class="pe-1" th:if="${repro.access=='restricted'}" th:title="#{demel.vocabulary.reproduction\_\_access.__${repro.access}__.term}">
+                          <i class="fa-solid fa-lock"></i>
+                        </span>
+                      </td>
+                      <td>
+                        <a th:href="${repro.onlineUrl}" th:text="${repro.provider}">Provider</a>
+                        <small th:unless="${#strings.isEmpty(repro.hintsExtern)}">
+                          <br /><span th:text="${repro.hintsExtern}"></span>
+                        </small>
+                      </td>
+                    </tr>
+                  </table>
+                </div>
+                <hr class="my-2" th:unless="${ed_stats.last}"/>
+              </div>
+            </div>
+          </td>
+      </tr>
+      
+      <tr class="bg-transparent">
+          <th th:text="#{demel.parts.infobox.source.sigle}">Sigle:</th>
+          <td th:text="${source.name}"></td>
+      </tr>
+      <tr class="bg-transparent" th:unless="${#lists.isEmpty(source.sigleVariationsForDisplay)}">
+          <th th:text="#{demel.parts.infobox.source.sigle.variations}">Sigle-Variante(n):</th>
+          <td>
+            <th:block th:each="s,stats : ${source.sigleVariationsForDisplay}">
+              <span th:utext="${s}"></span>
+              <span th:unless="${stats.last}">, </span>
+            </th:block>
+          </td>
+      </tr>
+      <tr class="bg-transparent" th:unless="${#strings.isEmpty(source.datingDisplay)}">
+          <th th:text="#{demel.parts.infobox.source.dating}">Datierung:</th>
+           <td th:unless="${#strings.isEmpty(source.datingDisplay) || source.datingDisplay=='[none]'}"  th:utext="${source.datingDisplay}"></td>
+           <td th:if="${#strings.isEmpty(source.datingDisplay)}"> <em th:utext="#{demel.attestations.table.dating.null}"></em></td>
+           <td th:if="${source.datingDisplay == '[none]'}"><em th:utext="#{demel.attestations.table.dating.none}"></em></td>
+      </tr>
+      <tr class="bg-transparent">
+          <th th:text="#{demel.parts.infobox.source.type}">Quelltyp:</th>
+          <td><span class="demel-search-filter-symbol" th:text="${source.typeSymbol}"></span>
+              <span th:text="#{demel.bibliography_form.filter.type.checkbox.__${source.type}__}"></span>
+          </td>
+      </tr>
+      <tr class="bg-transparent" th:unless="${#lists.isEmpty(source.texttypes)}">
+        <th th:text="#{demel.parts.infobox.source.texttype}">Textsorte</th>
+        <td>
+          <th:block th:each="tt,stats : ${source.texttypes}">
+            <span th:text="#{demel.vocabulary.source\_\_texttype.__${tt}__.term}"></span>
+            <span th:unless="${stats.last}">, </span>
+          </th:block>
+        </td>
+      </tr>
+      <tr th:unless="${#lists.isEmpty(source.languages)}" >
+        <th th:text="#{demel.parts.infobox.source.language}">Sprache</th>
+        <td>
+          <th:block th:each="l,stats : ${source.languages}">
+            <span th:text="#{demel.vocabulary.source\_\_language.__${l}__.term}"></span>
+            <span th:unless="${stats.last}">, </span>
+          </th:block>
+        </td>
+      </tr>
+      <tr class="bg-transparent"  th:unless="${#strings.isEmpty(source.genre) AND #strings.isEmpty(source.subgenre)}">
+          <th>
+            <span th:unless="${#strings.isEmpty(source.genre)}" th:text="#{demel.parts.infobox.source.genre}">Genre</span>
+            <span th:unless="${#strings.isEmpty(source.genre) OR #strings.isEmpty(source.subgenre)}" class="mx-1">/</span>
+            <span th:unless="${#strings.isEmpty(source.subgenre)}" th:text="#{demel.parts.infobox.source.subgenre}">Subgenre</span>
+          </th>
+          <td><span th:unless="${#strings.isEmpty(source.genre)}" th:text="#{demel.vocabulary.source\_\_genre.__${source.genre}__.term}"></span> 
+              <strong th:unless="${#strings.isEmpty(source.genre) OR #strings.isEmpty(source.subgenre)}" class="mx-1">/</strong>
+              <span th:unless="${#strings.isEmpty(source.subgenre)}" th:text="#{demel.vocabulary.source\_\_subgenre.__${source.subgenre}__.term}"></span>
+          </td>
+      </tr>
+      <tr class="bg-transparent" th:unless="${#lists.isEmpty(source.persons)}">
+          <th th:text="#{demel.parts.infobox.source.persons}">Autor / Übersetzer:</th>
+          <td>
+             <div th:each="p,stats : ${source.persons}" th:attr="data=${p.id}">
+                <span th:unless="${#strings.isEmpty(p.nameDisplay)}" th:text="${p.nameDisplay}" class="pe-2 pt-2">Max Mustermann</span>
+                <a th:unless="${#strings.isEmpty(p.bneId)}" 
+                   th:href="#{demel.parts.infobox.source.persons.url.bne(${p.bneId})}" 
+                   th:title="#{demel.parts.infobox.source.persons.tooltip.bne}">
+                   <img th:src="@{/images/external_ids/bne_logo.svg}" style="height:1.5em"></img>
+                </a>
+                <a th:unless="${#strings.isEmpty(p.viafId)}" 
+                   th:href="#{demel.parts.infobox.source.persons.url.viaf(${p.viafId})}" 
+                   th:title="#{demel.parts.infobox.source.persons.tooltip.viaf}">
+                   <img th:src="@{/images/external_ids/viaf_logo.svg}" style="height:2em"></img>
+                </a>
+                <a th:unless="${#strings.isEmpty(p.gndId)}" 
+                   th:href="#{demel.parts.infobox.source.persons.url.gnd(${p.gndId})}" 
+                   th:title="#{demel.parts.infobox.source.persons.tooltip.gnd}">
+                   <img th:src="@{/images/external_ids/gnd_logo.svg}" style="height:1.5em"></img>
+                </a>
+                <a th:unless="${#strings.isEmpty(p.wikidataId)}" 
+                   th:href="#{demel.parts.infobox.source.persons.url.wikidata(${p.wikidataId})}" 
+                   th:title="#{demel.parts.infobox.source.persons.tooltip.wikidata}">
+                   <img th:src="@{/images/external_ids/wikidata_logo.svg}" style="height:1.5em"></img>
+                </a>
+                
+             </div>
+          </td>        
+      </tr>
+      <tr class="bg-transparent" th:unless="${#lists.isEmpty(source.betaIds) AND #lists.isEmpty(source.hsmsIds)}">
+        <th th:text="#{demel.parts.infobox.source.external_ids}">Externe IDs:</th>
+        <td>
+          <span th:unless="${#lists.isEmpty(source.betaIds)}">
+            <th:block th:each="b,stats : ${source.betaIds}">
+              <abbr th:title="#{demel.parts.infobox.source.external_ids.tooltip.beta}"
+                    th:text="#{demel.parts.infobox.source.external_ids.name.beta}">BETA</abbr>
+              <a th:href="#{demel.parts.infobox.source.external_ids.url.beta(${b})}" 
+                 th:text="#{demel.parts.infobox.source.external_ids.value.beta(${b})}">texid 1234</a>
+              <span th:unless="${stats.last}">, </span>
+            </th:block>
+          </span>
+          <strong class="mx-2" th:unless="${#lists.isEmpty(source.betaIds) OR #lists.isEmpty(source.hsmsIds)}">/</strong>
+          <span th:unless="${#lists.isEmpty(source.hsmsIds)}">
+            <th:block th:each="h,stats : ${source.hsmsIds}">
+              <abbr th:title="#{demel.parts.infobox.source.external_ids.tooltip.hsms}" 
+                    th:text="#{demel.parts.infobox.source.external_ids.name.hsms}">HSMS</abbr>
+              <span th:text="${#strings.replace('__#{demel.parts.infobox.source.external_ids.value.hsms(${h})}__','HSMS-','')}">-123</span>
+              <span th:unless="${stats.last}">, </span>
+            </th:block>
+          </span>
+        </td>
+      </tr>
+      <tr class="bg-transparent">
+            <th th:text=#{demel.parts.infobox.source.belege}>Belege:</th>
+            <td>
+              <em th:if="${source.countAttestations} == 0" th:text="#{demel.parts.infobox.common.attestations.none}">[keine Belege]</em>
+               <a th:if="${source.countAttestations} > 0" class="btn btn-primary btn-sm float-end" 
+                 th:title=#{demel.parts.infobox.common.attestations.title.show} th:href="@{/browse/attestations(used_source_object=${source.id})}">
+                 <i class="fa-regular fa-eye"></i> 
+                 <span th:text="#{demel.parts.infobox.common.attestations.show}">anzeigen</span>
+              </a>
+              <span th:if="${source.countAttestations} > 0" class='pe-1' th:text="${source.countAttestations}"></span>
+              <span th:if="${source.countAttestations} == 1" th:text="#{demel.parts.infobox.common.attestation}">Beleg</span>
+              <span th:if="${source.countAttestations} > 1" th:text="#{demel.parts.infobox.common.attestations}">Belege</span>
+            </td>
+        </tr>
+      </table>
+    </div>
+    <div class="card-footer py-1">
+       <table class="w-100">
+         <col style="width:10em" />
+         <tr style="background-color:transparent;">
+           <th th:text="#{demel.parts.infobox.common.citelink}">Zitierlink:</th>
+           <td> 
+             <a class="float-end" title="JSON-Data" th:href="@{/api/data/json/bibliography/__${source.id}__}"><i class="fa-solid fa-database text-dark"></i></a>
+             <a th:href="${@environment.getProperty('demel.basepurl')+source.id}" th:text="${@environment.getProperty('demel.basepurl')+source.id}"></a>
+           </td>
+         </tr>
+       </table>
+    </div>
+  </div>
+</html>

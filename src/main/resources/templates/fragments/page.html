@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<!--/*
+ * This file is part of the DEMel web application.
+ * 
+ * Copyright 2023
+ * DEMel project team, Rostock University, 18051 Rostock, Germany
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */-->
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+<meta charset="UTF-8" />
+<title th:text="#{demel.page.title}">Layout Components</title>
+<meta th:fragment="html_header" http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta th:fragment="html_header" name="viewport" content="width=device-width, initial-scale=1" />
+<meta th:fragment="html_header" name="demel-baseurl" th:content="@{/}" />
+<meta th:fragment="html_header" name="demel-dorourl" th:content="${@environment.getProperty('doro.url')}">
+
+<link th:fragment="html_header" rel="stylesheet" type="text/css" th:href="@{/webjars/font-awesome/css/all.css}" />
+<link th:fragment="html_header" rel="stylesheet" type="text/css" th:href="@{/webjars/select2/css/select2.css}" />
+<link th:fragment="html_header" rel="stylesheet" type="text/css" th:href="@{/webjars/select2-bootstrap-5-theme/dist/select2-bootstrap-5-theme.min.css}" />
+<link th:fragment="html_header" rel="stylesheet" type="text/css" th:href="@{/webjars/datatables/css/dataTables.bootstrap5.min.css}" />
+<link th:fragment="html_header" rel="stylesheet" type="text/css" th:href="@{/themes/unirostock/css/unirostock.css}" media="all" />
+<link th:fragment="html_header" rel="stylesheet" type="text/css" th:href="@{/css/demel.css}" />
+
+<script th:fragment="html_header" th:src="@{/themes/unirostock/js/unirostock.js}"></script>
+</head>
+<body>
+
+<nav th:fragment="top_navigation" class="ir-nav-top">
+  <div class="container">
+    <div class="row">
+      <div class="col">
+        <ul class="nav justify-content-end">
+          <li class="nav-item">
+            <a class="nav-link" th:href="@{/}" th:title="#{demel.page.menu.top.welcome.tooltip}" th:utext="#{demel.page.menu.top.welcome}" th:classappend="${requestURI} == '__@{/}__' ? 'active'">Home</a>
+          </li>
+          <li class="nav-item" sec:authorize="isAuthenticated()">
+            <div class="d-inline">
+              <span th:text="#{demel.top.user}">User:</span>
+              <span sec:authentication="name"></span>
+              &nbsp;
+              <form th:action="@{/logout}" method="POST" class="d-inline p-0">
+               ( <input class="btn btn-link text-white p-0" style="margin-top:-.25em;" type="submit" th:value="#{demel.top.logout}" value="Logout2" /> )
+              </form>
+              &nbsp;
+            </div>
+          </li>
+          <li class="nav-item" sec:authorize="isAnonymous()">
+            <a class="nav-link" th:href="@{/login}" th:title="#{demel.page.menu.top.login.tooltip}" th:utext="#{demel.page.menu.top.login}">Login</a>
+          </li>
+          <li id="languageSelector" class="nav-item" th:data-current-lang="${#locale}">
+            <div class="dropdown">
+              <a class="nav-link dropdown-toggle d-inline" style="cursor:pointer" id="languageMenue" data-bs-toggle="dropdown" aria-expanded="false" th:title="#{demel.page.menu.top.lang.tooltip}">
+                &#x1F310;&#xFE0E; <span th:text="#{lang.iso-639-1.__${#locale.language}__}">DE</span>
+              </a>
+              <div class="dropdown-menu dropdown-menu-right bg-primary" aria-labelledby="languageMenue">
+                <a class="dropdown-item" th:href="@{''(lang=es)}" th:title="#{demel.page.menu.top.lang.es.tooltip}">
+                  <img class="float-end" style="height:1.33em;margin-top:.1em" th:src="@{/images/flags/es.png}" /> 
+                  <i class="fa-regular fa-circle" th:unless="${#locale.language=='es'}"></i>
+                  <i class="fa-regular fa-circle-check" th:if="${#locale.language=='es'}"></i>
+                  <span class="ps-2 pe-5" th:utext="#{demel.page.menu.top.lang.es}">Espanol</span>
+                </a>
+                <a class="dropdown-item" th:href="@{''(lang=en)}" th:title="#{demel.page.menu.top.lang.en.tooltip}">
+                  <img class="float-end" style="height:1.33em;margin-top:.1em" th:src="@{/images/flags/en.png}"  />
+                  <i class="fa-regular fa-circle" th:unless="${#locale.language=='en'}"></i>
+                  <i class="fa-regular fa-circle-check" th:if="${#locale.language=='en'}"></i>
+                  <span class="ps-2 pe-5" th:utext="#{demel.page.menu.top.lang.en}">English</span>
+                </a>
+                <a class="dropdown-item" th:href="@{''(lang=de)}" th:title="#{demel.page.menu.top.lang.de.tooltip}">
+                  <img class="float-end" style="height:1.33em;margin-top:.1em" th:src="@{/images/flags/de.png}"  />
+                  <i class="fa-regular fa-circle" th:unless="${#locale.language=='de'}"></i>
+                  <i class="fa-regular fa-circle-check" th:if="${#locale.language=='de'}"></i>
+                  <span class="ps-2 pe-5" th:utext="#{demel.page.menu.top.lang.de}">Deutsch</span>
+                </a>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</nav>
+  
+<header th:fragment="header(navActive)" class="container ir-header" style="position:relative">
+  <div class="row">
+    <div class="col-10 col-md-7">
+      <img class="ir-header-logo" th:src="@{/images/DEMel_logo.svg}" alt="DEMel Logo" style="max-width:100%" />
+      
+    </div>
+    <div class="d-none d-md-block col-md-5 demel-search">
+      <form th:action="@{/browse/search}" name="search_form" method="post" accept-charset="UTF-8" th:unless="${requestURI == '__@{/}__'}">
+        <div class="card card-secondary border border-dark float-end mt-3">
+          <div class="card-header pt-0">
+            <span class="text-dark" style="cursor:pointer;position:absolute;top: .2em; right:1em;z-index:1" 
+                  data-bs-html="true" data-object-type="lemma" data-bs-placement="left" 
+                  th:data-bs-title="#{demel.top.searchbox.info.title}" 
+                  th:data-bs-content="#{demel.top.searchbox.info.content}" data-bs-toggle="popover-help"><i class="fa-regular fa-circle-question"></i></span>
+            <div class="row">
+              <div class="col pt-1 form-control-sm">
+                  <input class="form-check-input ms-2" id="topquery2_lemma" type="radio" name="option" value="lemma" checked="checked" />
+                  <label class="form-check-label" for="topquery2_lemma" th:text="#{demel.top.searchbox.option.lemma}">Lemma</label>
+                  <input class="form-check-input ms-4" type="radio" id="topquery2_attestations" name="option" value="attestation" />
+                  <label class="form-check-label me-5" for="topquery2_attestations" th:text="#{demel.top.searchbox.option.attestation_form}">Belegte Form</label>
+              </div>
+            </div>
+            <div class="row ">
+              <div class="col">
+                <div class="input-group ">
+                  <input id="topquery2_term" class="form-control form-control-sm" type="text" name="term" th:placeholder="#{demel.top.searchbox.placeholder}" />
+                  <button class="btn btn-sm btn-primary" type="submit">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="d-md-none col-2 pt-3">
+        <div class="dropdown float-end">
+          <button class="btn btn-lg text-primary dropdown-toggle"  data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <div class="dropdown-menu dropdown-menu-right">
+            <a id="nav-main-home" class="dropdown-item" th:classappend="${#strings.contains(navActive,'nav-main-home')}  ? 'active' : ''" 
+               th:href="@{/}" th:title="#{demel.page.menu.main.home.tooltip}" th:utext="#{demel.page.menu.main.home}">Home</a>
+            <a id="nav-main-browse" class="dropdown-item" th:classappend="${#strings.contains(navActive,'nav-main-intro')}  ? 'active' : ''" 
+               th:href="@{/site/intro_overview}" th:utext="#{demel.page.menu.main.intro}">Einführung</a>
+            <a id="nav-main-lemmas" class="dropdown-item" th:classappend="${#strings.contains(navActive,'nav-main-lemmas')}  ? 'active' : ''" 
+               th:href="@{/browse/lemmas}" th:text="#{demel.page.menu.main.lemmas}">Lemmaliste</a>
+            <a id="nav-main-attestations" class="dropdown-item" th:classappend="${#strings.contains(navActive,'nav-main-attestations')}  ? 'active' : ''" 
+               th:href="@{/browse/attestations}" th:text="#{demel.page.menu.main.attestations}">Belegte Formen</a>            
+            <a id="nav-main-bibliography" class="dropdown-item" th:classappend="${#strings.contains(navActive,'nav-main-bibliography')}  ? 'active' : ''" 
+               th:href="@{/browse/bibliography}" th:text="#{demel.page.menu.main.bibliography}">Bibliography</a>
+            <a id="nav-main-fichero" class="dropdown-item" th:classappend="${#strings.contains(navActive,'nav-main-fichero')}  ? 'active' : ''" 
+               th:href="@{/site/fichero}" th:text="#{demel.page.menu.main.fichero}">Zettelkasten</a>
+          </div>
+        </div>
+      </div>
+  </div>
+</header>
+
+  <nav th:fragment="navigation(navActive)" class="ir-nav-main container">
+    <div class="row d-none d-md-block">
+      <div class="col my-3">
+        <ul class="nav nav-pills nav-fill ir-nav-main">
+          <li class="nav-item">
+            <a id="nav-main-home" class="nav-link" th:classappend="${#strings.contains(navActive,'nav-main-home')}  ? 'active' : ''" 
+               th:href="@{/}" th:title="#{demel.page.menu.main.home.tooltip}" th:utext="#{demel.page.menu.main.home}">Home</a></li>
+          <li class="nav-item">
+            <a id="nav-main-browse" class="nav-link" th:classappend="${#strings.contains(navActive,'nav-main-intro')}  ? 'active' : ''" 
+               th:href="@{/site/intro_overview}" th:utext="#{demel.page.menu.main.intro}">Einführung</a></li>
+           <li class="nav-item">
+            <a id="nav-main-lemmas" class="nav-link" th:classappend="${#strings.contains(navActive,'nav-main-lemmas')}  ? 'active' : ''" 
+                th:href="@{/browse/lemmas}" th:text="#{demel.page.menu.main.lemmas}">Lemmaliste</a></li>
+          <li class="nav-item">
+            <a id="nav-main-attestations" class="nav-link" th:classappend="${#strings.contains(navActive,'nav-main-attestations')}  ? 'active' : ''" 
+               th:href="@{/browse/attestations}" th:text="#{demel.page.menu.main.attestations}">Belegte Formen</a></li>            
+          <li class="nav-item">
+            <a id="nav-main-bibliography" class="nav-link" th:classappend="${#strings.contains(navActive,'nav-main-bibliography')}  ? 'active' : ''" 
+               th:href="@{/browse/bibliography}" th:text="#{demel.page.menu.main.bibliography}">Bibliography</a></li>
+          <li class="nav-item">
+            <a id="nav-main-fichero" class="nav-link" th:classappend="${#strings.contains(navActive,'nav-main-fichero')}  ? 'active' : ''" 
+               th:href="@{/site/fichero}" th:text="#{demel.page.menu.main.fichero}">Zettelkasten</a></li>
+          <li class="nav-item dropdown" sec:authorize="hasRole('ROLE_MANAGER')">
+            <a id="nav-main-admin" class="nav-link dropdown-toggle px-1" data-bs-toggle="dropdown" role="button"
+               th:classappend="${#strings.contains(navActive,'nav-main-admin')}  ? 'active' : ''" href="#"  
+               aria-haspopup="true" aria-expanded="false" th:title="#{demel.page.menu.main.admin.tooltip}" th:utext="#{demel.page.menu.main.admin}">Admin</a>
+            <div class="dropdown-menu dropdown-menu-right">
+              <a class="dropdown-item" th:href="@{/browse/admin/indexing}" th:text="#{demel.page.menu.main.admin.indexing}">Neu-Indexierung</a>
+              <a class="dropdown-item" th:href="@{/browse/admin/charstats}" th:text="#{demel.page.menu.main.admin.charstats}">Zeichen-Statistik</a>
+              <a class="dropdown-item" th:href="@{/site/news}" th:text="#{demel.page.menu.main.admin.edit_news}">Aktuelles bearbeiten</a>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <footer th:fragment="footer" class="ir-footer">
+    <div class="container">
+      <div class="row">
+        <div class="col-12 col-sm-6 order-1 col-lg-3">
+          <h5 th:text="#{demel.page.footer.kontakt.title}">Kontakt</h5>
+          <p>
+          <a href="https://www.romanistik.uni-rostock.de/forschung/sprachwissenschaft/demel/" th:utext="#{demel.page.footer.kontakt.uni}">
+          Universität Rostock<br />
+          DFG-Forschungsstelle DEM<i>el</i></a>
+          </p>
+         <ul>
+            <li>
+            <i class="fa-regular fa-envelope"></i>&nbsp; 
+            <a class="link_e-mail" href="javascript:UnCryptMailTo('bWFpbHRvOmRlbS5lbGVjdHJvbmljb0B1bmktcm9zdG9jay5kZQ==');" th:text="#{demel.page.footer.kontakt.email}">
+              dem.electronico(at)uni-rostock.de
+            </a></li>
+          </ul>
+        </div>
+        <div class="col-12 col-sm-6 order-3 col-lg-3 order-lg-2 d-none d-md-block pb-3">
+          <div class="text-center bg-white h-100">
+              <a href="http://www.uni-rostock.de/"> <img class="p-3" alt="Uni Rostock" th:src="@{/images/rostock_logo.png}"
+                th:title="#{demel.page.footer.image.title.uni_rostock}" style="max-width: 100%; background-color: white;">
+              <span class="d-block bg-white text-footer pb-1 text-center small" th:utext="#{demel.page.footer.institut.romainstik_ub}">Institut für Romanistik / Universitätsbibliothek</span>
+            </a>
+          </div>
+        </div>
+        <div class="col-12 col-sm-6 order-4 col-lg-3 order-lg-3 d-none d-md-block pb-3">
+          <div class="text-center bg-white h-100">
+            <a href="http://www.uni-paderborn.de/"> <img class="px-2 py-2" alt="Uni Paderborn" th:src="@{/images/paderborn_logo.png}"
+               th:title="#{demel.page.footer.image.title.uni_paderborn}" style="width: 75%; background-color: white;">
+               <span class="d-block bg-white text-footer pb-1 text-center small" th:utext="#{demel.page.footer.institut.romanistik}">Institut für Romanistik</span>
+            </a>
+          </div>
+        </div>
+        <div class="col-12 col-sm-6 order-2 col-lg-3 order-lg-4 pt-4">
+          <p th:text="#{demel.page.footer.dfg}">gefördert durch</p>
+          <a href="http://www.dfg.de/"> <img alt="DFG" src="/images/dfg_logo_schriftzug_weiss.png" th:title="#{demel.page.footer.dfg.image.title}" style="max-width: 250px"></a>
+          <div class="small mt-2">
+            (<span th:text="#{demel.page.footer.dfg.projekt}">Projektnummer:</span> <a href="https://gepris.dfg.de/gepris/projekt/282533776" th:text="#{demel.page.footer.dfg.projekt.nummer}">282533776</a>)
+          </div>
+        </div>
+      </div>
+      <hr style="background-color:white;margin-top:0.25rem;"/>
+      <div class="row mt-2">
+        <div class="col d-block d-md-flex justify-content-between">
+          <div class="mb-3">
+            <span th:utext="#{demel.page.footer.copyright}">© 2022 Diccionario del Español Medieval <em>electrónico</em> (DEM<em>el</em>)</span>
+          </div>
+          <div class="mb-3 mx-0 mx-md-3" >
+            <a href="https://creativecommons.org/licenses/by-sa/4.0/"><img id="licensebutton" alt="Creative Commons License (CC-BY-SA 4.0)" th:src="@{/images/cc-by-sa_4_80x15.svg}" style="height:1.5em" ></a>
+          </div>
+          <div class="mb-3" >
+            <a th:href="@{/site/intro_citation}" th:utext="#{demel.page.footer.citation}" class="text-nowrap">Zitierweise</a>
+          </div>
+          <div class="mb-3 mx-0 mx-md-3 text-nowrap">
+            <span th:utext="#{demel.page.footer.github_url}">Github</span>
+          </div>
+          <div class="mb-3">
+            <a href="https://www.ub.uni-rostock.de/footer/impressum/" th:title="#{demel.page.footer.impressum.title}" th:text="#{demel.page.footer.impressum}">Impressum</a>,
+            <a href="https://www.ub.uni-rostock.de/footer/datenschutz/" th:title="#{demel.page.footer.datenschutz.title}" th:text="#{demel.page.footer.datenschutz}">Datenschutzerklärung</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script th:fragment="script_footer" th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+  <script th:fragment="script_footer" th:src="@{/webjars/jquery/jquery.min.js}"></script>
+  <!-- /* <script th:fragment="script_footer" th:src="@{/webjars/datatables/js/jquery.dataTables.min.js}"></script>*/-->
+  <script th:fragment="script_footer" th:src="@{/webjars/datatables/js/jquery.dataTables.js}"></script>
+  <script th:fragment="script_footer" th:src="@{/webjars/datatables-plugins/pagination/input.js}"></script>
+  <script th:fragment="script_footer" th:src="@{/webjars/datatables/js/dataTables.bootstrap5.min.js}"></script>
+  <script th:fragment="script_footer" th:src="@{/javascript/datatables/js/dataTables.scrollToTop.min.js}" ></script>
+  <script th:fragment="script_footer" th:src="@{/webjars/select2/js/select2.full.js}"></script>
+  <script th:fragment="script_footer" th:src="@{/webjars/tinymce/tinymce.min.js}"></script>    
+  <script th:fragment="script_footer" type="text/javascript" th:src="@{/javascript/demel.js}"></script>
+  <script th:fragment="script_footer" type="text/javascript" th:src="@{/javascript/demel_messages.js}"></script>
+
+</body>
+</html>

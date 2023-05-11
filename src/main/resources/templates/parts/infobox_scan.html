@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<!--/*
+ * This file is part of the DEMel web application.
+ * 
+ * Copyright 2023
+ * DEMel project team, Rostock University, 18051 Rostock, Germany
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */-->
+ 
+<!--/* model variables: lemma */-->
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org"
+  xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+  <div class="card border border-secondary demel-infobox">
+    <div class="card-header py-2">
+     <h3 class="mb-0"><span class="text-body" th:text="#{demel.parts.infobox.scan.title}">Zettel</span></h3>
+    </div>
+    <div class="card-body py-1">
+      <table class="table table-sm table-borderless mb-0">
+      <col style="width:10em" />
+      <tr class="bg-transparent">
+          <th th:text="#{demel.parts.infobox.scan.id}">ID:</th>
+          <td th:text="${scan.id}"></td>
+      </tr>
+      <tr class="bg-transparent">
+          <th th:text="#{demel.parts.infobox.scan.contentid}">Image ID:</th>
+          <td>
+
+                <a class='btn btn-secondary btn-sm float-end' 
+                   th:title=#{demel.parts.infobox.common.attestations.title.show} 
+                   th:href="${@environment.getProperty('doro.url') + 'api/iiif/image/v2/demel%252F'+ #strings.replace(scan.contentid, '/', '%252F')+'/full/full/' + scan.rotation + '/default.jpg'}">
+                   <i class='fa-regular fa-image'></i>
+                   <span th:text="#{demel.parts.infobox.common.attestations.show}">anzeigen</span>
+                </a>
+                <span th:text="${scan.contentid}"></span>
+
+          </td>
+      </tr>
+      <tr class="bg-transparent">
+          <th th:text="#{demel.parts.infobox.scan.rotation}">Drehung:</th>
+          <td><span th:text="${scan.rotation}"></span> °</td>
+      </tr>
+      <tr class="bg-transparent">
+          <th th:text="#{demel.parts.infobox.scan.box}">Kasten:</th>
+          <td><span th:text=${scan.boxId}></span>
+            <!-- TO - Link --> 
+          </td>
+      </tr>
+      <tr class="bg-transparent">
+          <th th:text="#{demel.parts.infobox.scan.attestations}">Belege:</th>
+          <td th:with="count=${#lists.size(scan.attestationIds)}">
+              <em th:if="${count} == 0" th:text="#{demel.parts.infobox.common.attestations.none}">[keine Belege]</em>
+              <div class="clearfix">
+                <a th:if="${count} > 0" class='btn btn-primary btn-sm float-end' 
+                   th:title=#{demel.parts.infobox.common.attestations.title.show}  
+                   th:href="@{/browse/attestations?att_object=__${#strings.listJoin(scan.attestationIds, '&att_object=')}__}">
+                   <i class='fa-regular fa-eye'></i>
+                   <span th:text="#{demel.parts.infobox.common.attestations.show}">anzeigen</span>
+                </a>
+                <span th:if="${count} > 0" class="pe-1" th:text="${count}"></span>
+                <span th:if="${count} == 1" th:text="#{demel.parts.infobox.common.attestation}">Beleg</span>
+                <span th:if="${count} > 1" th:text="#{demel.parts.infobox.common.attestations}">Belege</span>
+             </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="card-footer py-1">
+       <table class="w-100">
+         <col style="width:10em" />
+         <tr style="background-color:transparent;">
+           <th th:text="#{demel.parts.infobox.common.citelink}">Zitierlink:</th>
+           <td> 
+             <a class="float-end" title="JSON-Data" th:href="@{/api/data/json/scans/__${scan.id}__}"><i class="fa-solid fa-database text-dark"></i></a>
+             <a th:href="${@environment.getProperty('demel.basepurl') + scan.id}" th:text="${@environment.getProperty('demel.basepurl') + scan.id}"></a>
+           </td>
+         </tr>
+       </table>
+    </div>
+  </div>
+</html>

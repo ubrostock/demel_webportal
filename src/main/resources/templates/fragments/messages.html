@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<!--/*
+ * This file is part of the DEMel web application.
+ * 
+ * Copyright 2023
+ * DEMel project team, Rostock University, 18051 Rostock, Germany
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */-->
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+
+  <div th:fragment="message_form (objId, msgId)" class="clearfix mb-3">
+    <form th:id="${'form_message_' + objId + '_edit_' + msgId}" 
+          onsubmit="submitMessageForm(this, event);" onreset="resetMessageForm(this, event);"
+          th:action="${msgId == 'new'} ? @{/api/messages/__${objId}__/new} : @{/api/messages/__${objId}__/edit/__${msgId}__}" 
+          th:data-object-id="${objId}" th:data-message-id="${msgId}"
+          th:object="${message}">
+        <!-- add CSRF parameter manually, because the form is generated from javascript -->
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+        <input type="hidden" th:field="*{objectIdAsString}">
+        <input type="hidden" th:field="*{id}">
+        <div class="row mb-3" th:if="${#fields.hasErrors()}">
+          <div class="col">
+            <div class="alert alert-danger" th:if="${#fields.hasGlobalErrors()}">
+              <p th:each="err : ${#fields.globalErrors()}" th:text="#{__${err}__}">...</p>
+            </div>
+            <div class="alert alert-danger" th:if="${#lists.size(#fields.errors()) - #lists.size(#fields.globalErrors()) > 0}"
+                 th:text="#{demel.common.editor.error.correct_input}">
+               Bitte korrigieren Sie die fehlerhaften Eingabefelder!
+            </div>
+          </div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-6">
+            <div class="row mb-3">
+              <label class="col-sm-4 form-label" 
+                     th:for="${'sel_messages_' + objId + '_' + msgId + '_type'}"
+                     th:text="#{demel.message_form.label.type}">Art:</label>
+              <div class="col-sm-8">
+                <select class="form-select ps-1" th:id="${'sel_messages_'+objId+'_'+msgId+'_type'}" th:field="*{type}">
+                  <option value="user_comment" th:text="#{demel.vocabulary.message__type.user_comment.term}">öffentlicher Kommentar</option>
+                  <option value="user_error" th:text="#{demel.vocabulary.message__type.user_error.term}">öffentliche Fehlermeldung</option>
+                  <option value="official_comment" th:text="#{demel.vocabulary.message__type.official_comment.term}" sec:authorize="hasRole('ROLE_MESSAGEEDITOR')">Kommentar des DEMel Teams</option>
+                  <option value="official_revision" th:text="#{demel.vocabulary.message__type.official_revision.term}" sec:authorize="hasRole('ROLE_MESSAGEEDITOR')">Korrekturhinweis des DEMel Teams</option>
+                  <option value="official_error" th:text="#{demel.vocabulary.message__type.official_error.term}" sec:authorize="hasRole('ROLE_MESSAGEEDITOR')">Fehlermeldung des DEMel Teams</option>
+                </select>
+              </div>
+            </div>
+            <div class="row mb-3">
+              <label class="col-sm-4 form-label"
+                     th:for="${'input_messages_'+ objId + '_' + msgId + '_creatorName'}"  
+                     th:text="#{demel.message_form.label.creator.name}">Ihr Name:</label>
+              <div class="col-sm-8">
+                <input type="text" class="form-control" 
+                       th:id="${'input_messages_'+ objId + '_' + msgId + '_creatorName'}" 
+                       th:field="*{creatorName}"
+                       th:data-original="ABC"
+                       th:errorclass="is-invalid"></input>
+                <span class="invalid-feedback ps-1" th:each="err : ${#fields.errors('creatorName')}" th:text="#{__${err}__}"></span>
+              </div>
+              
+            </div>
+            <div class="row mb-3">
+              <label class="col-sm-4 form-label"
+                     th:for="${'input_messages_'+ objId + '_' + msgId + '_creatorEmail'}"
+                     th:text="#{demel.message_form.label.creator.email}">Ihre E-mail:</label>
+              <div class="col-sm-8">
+                <input type="text" class="form-control" 
+                       th:id="${'input_messages_'+ objId + '_' + msgId + '_creatorEmail'}" 
+                       th:field="*{creatorEmail}"
+                       th:errorclass="is-invalid"></input>
+                <span class="invalid-feedback ps-1" th:each="err : ${#fields.errors('creatorEmail')}" th:text="#{__${err}__}"></span>
+              </div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="alert alert-info small p-2" role="alert" th:utext="#{demel.message_form.info}">
+              Öffentliche Komentare...
+            </div>
+          </div>
+        </div>
+        <div class="row mb-3">
+          <label class="col-sm-2 form-label text-nowrap" 
+                 th:for="${'ta_messages_' + objId + '_' + msgId + '_content'}" 
+                 th:text="#{demel.message_form.label.message}">Kommentar:</label>
+          <div class="col-sm-10">
+            <textarea class="form-control"  rows="10"
+                      th:id="${'ta_messages_' + objId + '_' + msgId + '_content'}" 
+                      th:field="*{content}"
+                      th:errorclass="is-invalid"></textarea>
+            <span class="invalid-feedback ps-1" th:each="err : ${#fields.errors('content')}" th:text="#{__${err}__}"></span>
+          </div>
+        </div>
+        
+        <div class="row mb-3" sec:authorize="hasRole('ROLE_MESSAGEEDITOR')">
+           <label class="col-sm-2 form-label text-nowrap" 
+                  th:text="#{demel.message_form.label.status}">Status:</label>
+          <div class="col-sm-10">
+            <div class="btn-group btn-group-toggle" data-bs-toggle="buttons">
+              <th:block th:each="s : ${T(de.uni.rostock.demel.data.model.utility.Message.MessageStatus).values()}">
+                <label class="btn btn-outline-secondary btn-sm me-3" 
+                       th:classappend="${s.value == message.status} ? 'active'" 
+                       th:for="${'radio_messages_'+objId+'_'+msgId+'_'+s.value}">
+                   <input type="radio" th:id="${'radio_messages_'+objId+'_'+msgId+'_'+s.value}"
+                          th:field="*{status}" name="options" th:value="${s.value}">
+                   <span class="mb-0" >
+                     &nbsp; 
+                     <i th:class="${s.symbol}"></i>
+                     <span class="ps-2" th:utext="#{demel.vocabulary.common\_\_status.__${s.value}__.term}"></span>
+                   </span>
+                </label>
+                </th:block>
+            </div>
+          </div>
+        </div>
+        <hr />
+        <div class="row">
+          <label class="col-sm-2 form-label">&nbsp;</label>
+          <div class="col-sm-10">
+            <button type="submit" class="btn btn-primary float-end" th:text="#{demel.message_form.button.submit}">Absenden</button>
+            <button type="reset" class="btn btn-secondary" th:text="#{demel.message_form.button.reset}">Abbrechen</button>
+          </div>
+        </div>
+      </form>
+  </div>
+</html>

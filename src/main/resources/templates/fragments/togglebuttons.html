@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<!--/*
+ * This file is part of the DEMel web application.
+ * 
+ * Copyright 2023
+ * DEMel project team, Rostock University, 18051 Rostock, Germany
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */-->
+<html xmlns:th="http://www.thymeleaf.org">
+  <div class="clearfix mb-3" th:fragment="togglebutton_search_exact (formId)">
+    <div class="float-end">
+      <input th:id="${'input_search_exact_'+ formId}" class="d-none"
+             type="checkbox" name="search_exact" value="true" 
+             th:checked="${search_exact}" th:onclick="@{'document.' + '__${formId}__' + '.submit();'}" />
+      <label th:for="${'input_search_exact_'+ formId}" class="btn btn-sm btn-outline-secondary" 
+             th:classappend="${search_exact} ? active : ''" style="min-width:5em">
+        <i th:unless="${search_exact}" class="fa-solid fa-toggle-off"></i> 
+        <span th:unless="${search_exact}" th:text="#{demel.attestation_form.togglebutton.exact.off}">aus</span>
+        <i th:if="${search_exact}" class="fa-solid fa-toggle-on"></i> 
+        <span th:if="${search_exact}" th:text="#{demel.attestation_form.togglebutton.exact.on}">an</span>
+      </label>
+    </div>
+    <span class="text-dark pe-2 float-start" data-bs-html="true" data-object-type="lemma" data-bs-placement="left" 
+          style="cursor:pointer;padding-left:0.62em"
+          th:data-bs-title="#{demel.__${formId}__.togglebutton.exact.info.title}"
+          th:data-bs-content="#{demel.__${formId}__.togglebutton.exact.info.content}"
+          data-bs-toggle="popover-help"><i class="fa-regular fa-circle-question"></i></span>
+    <label class="pe-2" th:utext="#{demel.attestation_form.togglebutton.exact}">Exakte Suche:</span>
+  </div>
+  
+  <div th:fragment="togglebutton_filter">
+    <button id="btnToogleFilter" class="btn btn-lg btn-outline-primary pt-0" data-bs-toggle="collapse" data-bs-target="#facetInfo">
+      <span id="btnToogleFilterTextOn" ><small th:text="#{demel.common.searchmask.show}">Suche einblenden</small> <i class="fa-solid fa-toggle-on text-primary"></i></span>
+      <span id="btnToogleFilterTextOff" class="d-none"><small th:text="#{demel.common.searchmask.hide}">Suche ausblenden</small> <i class="fa-solid fa-toggle-off text-warning"></i></span>
+    </button>
+    <script type="text/javascript">
+      documentReady(function() {
+        document.getElementById('facetInfo').addEventListener('hidden.bs.collapse', event => {
+          document.getElementById("btnToogleFilterTextOff").classList.add('d-none');
+          document.getElementById("btnToogleFilterTextOn").classList.remove('d-none');
+          document.getElementById("btnCleanFilter").classList.add('d-none');
+        });
+        document.getElementById('facetInfo').addEventListener('shown.bs.collapse', event => {
+          document.getElementById("btnToogleFilterTextOff").classList.remove('d-none');
+          document.getElementById("btnToogleFilterTextOn").classList.add('d-none');
+          document.getElementById("btnCleanFilter").classList.remove('d-none');
+        });
+
+        if(document.querySelector("main").clientWidth > 720) {
+      	  bootstrap.Collapse.getOrCreateInstance("#facetInfo").show();
+        }
+        
+        window.addEventListener('resize', function() {
+          if(document.querySelector("main").clientWidth > 720) {
+            bootstrap.Collapse.getOrCreateInstance("#facetInfo").show();
+          } else {
+            bootstrap.Collapse.getInstance("#facetInfo")?.hide();
+          }
+        });
+      });
+    </script>
+  </div>
+</html>

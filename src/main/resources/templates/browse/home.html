@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<!--/*
+ * This file is part of the DEMel web application.
+ * 
+ * Copyright 2023
+ * DEMel project team, Rostock University, 18051 Rostock, Germany
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */-->
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org"
+  xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+<title th:text=#{demel.browse.home.head.title}>DEMel - Diccionario del Español Medieval electrónico</title>
+<meta th:replace="~{fragments/page :: html_header}" />
+<script type="application/ld+json" th:utext="${demel_schema_org}">
+	
+</script>
+</head>
+<body class="ir-body">
+  <nav th:replace="~{fragments/page :: top_navigation}"></nav>
+  <header th:replace="~{fragments/page :: header (navActive='nav-main-home')}"></header>
+  <nav th:replace="~{fragments/page :: navigation (navActive='nav-main-home')}">...</nav>
+  <main class="ir-main container">
+    <div class="row">
+      <div class="col">
+        <img class="w-100" th:src="@{/images/home/demel_header3.jpg}" alt="DEMel Header">
+      </div>
+    </div>
+    <div class="row mt-4">
+      <div class="col">
+        <h1 class="d-inline" th:utext="#{demel.browse.home.title}">
+          DEM<em>el</em> - Diccionario del Español Medieval <em>electrónico</em>
+        </h1>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col col-lg-8">
+        <p class="demel-text-justify py-3" th:utext="#{demel.browse.home.introduction}">
+          Der Diccionario del Español Medieval <em>electrónico</em> (DEM<em>el</em>) stellt ein umfangreiches,
+          wissenschaftlich fundiertes, lemmatisiertes und semantisch vorstrukturiertes elektronisches Datenarchiv zum
+          mittelalterlichen Spanisch zur Verfügung. Als Grundlage dient die digitalisierte Datensammlung des Ende 2007
+          aus finanziellen Gründen eingestellten Diccionario del Español Medieval (DEM), welches auf der Basis von mehr
+          als 620 literarischen und nicht literarischen Werken bzw. Text- und Dokumentensammlungen die
+          Entwicklungsgeschichte des spanischen Wortschatzes zwischen dem 10. und 15. Jahrhundert abdeckt. Insgesamt
+          enthält die Datenbank des DEMel XY Belegte Formen zu YZ Lemmata. Die verschiedenen Such- und Filterfunktionen
+          des Webportals gewährleisten eine strukturierte und komfortable Recherche in diesem Datenbestand und erlauben
+          einen raschen Zugriff auf eine große Fülle altspanischer Belege.
+        </p>
+        <div class="row">
+          <div class="col col-lg-10 offset-lg-1 col-xl-8 offset-xl-2">
+            <form name="search_form" th:action="@{/browse/search}" method="GET">
+              <div class="card ir-box-emph">
+                <div class="text-dark" style="cursor: pointer; position: absolute; top: .2em; right: .5em; z-index: 1"
+                  data-bs-html="true" data-bs-type="lemma" data-bs-placement="right"
+                  th:data-bs-title="#{demel.top.searchbox.info.title}"
+                  th:data-bs-content="#{demel.top.searchbox.info.content}" data-bs-toggle="popover-help">
+                  <i class="fa-regular fa-circle-question"></i>
+                </div>
+                <div class="card-header py-3">
+                  <div class="row">
+                    <div class="col">
+                      <div class="float-start pt-2">
+                        <input class="form-check-input" id="topquery2_lemma" type="radio" name="option" value="lemma"
+                          checked="checked" /> <label class="form-check-label" for="topquery2_lemma"
+                          th:text="#{demel.top.searchbox.option.lemma}">Lemma</label> <input
+                          class="form-check-input ms-3" id="topquery2_attestations" type="radio" name="option"
+                          value="attestation" /> <label class="form-check-label" for="topquery2_attestations"
+                          th:text="#{demel.top.searchbox.option.attestation_form}">Belegte Form</label>
+                      </div>
+                      <div class="input-group float-start ms-4"
+                        th:style="${('__${#locale}__' == 'de') ? 'width:calc(100% - 17em);min-width:14em' : 'width:calc(100% - 19em);min-width:12em'}">
+                        <input id="topquery2_term" class="form-control" type="text" th:name="term"
+                          th:placeholder="#{demel.top.searchbox.placeholder}" />
+                        <button class="btn btn-primary" type="submit">
+                          <i class="fa-solid fa-magnifying-glass"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4 d-none d-lg-block">
+        <div style="line-height: 92%" class="pt-3 ps-3">
+          <img style="width: 100%;" th:src="@{/images/home/alf_x_libro_de_los_juegos.jpg}" /> <small class="text-muted">Imagen
+            de apertura del Libro de los dados, <br />en el Libro de los juegos, Ms. T-I-6, RBME, fol. 65r.
+          </small>
+        </div>
+      </div>
+    </div>
+
+    <div class="row my-3">
+      <div class="col-12 col-md-4 pe-3 pt-3 pb-3">
+        <div class="border border-primary p-2" style="border-width: 2px !important; min-height: 20em">
+          <h3 th:text="#{demel.browse.home.news.title}">Aktuelles</h3>
+          <div id="news_content" class="condensed" style="width: 86%">
+            <!--/* Beispiel HTML:
+            <p><span class="small text-muted">21.10.2021</span><br />
+              Eine neue Version der DEMel-Webanwendung wurde veröffentlicht.
+              Eine Vielzahl von Fehlern wurde behoben und diverse Kleinigkeiten verbessert.
+            </p>
+
+            <p><span class="small text-muted">01.11.2021</span><br />
+              Das <a href=".">DEM<em>el</em>-Portal</a> geht online.
+            </p>
+            */-->
+          </div>
+          <script type="text/javascript">
+          documentReady(function() {
+            fetch(document.getElementsByName('demel-baseurl')[0].getAttribute('content') + "site/news")
+              .then((response) => response.text())
+              .then((text) => {
+                 let news =  btnShowAttestations = document.createRange().createContextualFragment(text);
+                 document.querySelector("#news_content").innerHTML = news.querySelector("#demel_content").innerHTML;
+               });
+            });
+        </script>
+        </div>
+      </div>
+      <div class="col-12 col-md-8 demel-text-justify pt-3">
+        <div th:with="base_url=@{/}" th:utext="${#messages.msg('demel.browse.home.overview', base_url)}"></div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-12 col-md-4 col-xl mb-4">
+        <div class="card ir-clickable-card text-center" th:data-url="@{/site/intro_overview}"
+          onclick="window.location.href=this.dataset.url">
+          <div style="position: relative" class="d-none d-lg-block">
+            <img class="card-img-top" th:src="@{/images/home/box_with_plate.jpg}" alt="[Bild]">
+            <div class="d-flex flex-column justify-content-center"
+              style="position: absolute; top: 36%; bottom: 37%; width: 100%; font-family: 'Arial Narrow'; line-height: 105%">
+              <span th:utext="#{demel.browse.home.box.vorstellung}">Vorstellung</span>
+            </div>
+          </div>
+          <div class="card-footer pt-1 pb-0 d-flex flex-column justify-content-center" style="min-height: 3.6em;">
+            <h4 class="text-white" th:utext="#{demel.browse.home.box.vorstellung}">Vorstellung</h4>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-4 col-xl mb-4">
+        <div class="card ir-clickable-card text-center" style="position: relative" th:data-url="@{/browse/lemmas}"
+          onclick="window.location.href=this.dataset.url">
+          <div style="position: relative" class="d-none d-lg-block">
+            <img class="card-img-top" th:src="@{/images/home/box_with_plate.jpg}" alt="[Bild]">
+            <div class="d-flex flex-column justify-content-center"
+              style="position: absolute; top: 36%; bottom: 37%; width: 100%; font-family: 'Arial Narrow'; line-height: 105%">
+              <span th:text="#{demel.browse.home.box.lemmaliste}">Lemmaliste</span>
+            </div>
+          </div>
+          <div class="card-footer pt-1 pb-0 d-flex flex-column justify-content-center" style="min-height: 3.6em;">
+            <h4 class="text-white" th:text="#{demel.browse.home.box.lemmaliste}">Lemmaliste</h4>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-4 col-xl mb-4">
+        <div class="card ir-clickable-card text-center" th:data-url="@{/browse/attestations}"
+          onclick="window.location.href=this.dataset.url">
+          <div style="position: relative" class="d-none d-lg-block">
+            <img class="card-img-top" th:src="@{/images/home/box_with_plate.jpg}" alt="[Bild]">
+            <div class="d-flex flex-column justify-content-center"
+              style="position: absolute; top: 36%; bottom: 37%; width: 100%; font-family: 'Arial Narrow'; line-height: 105%">
+              <span th:utext="#{demel.browse.home.box.attestation}">belegte <br /> Formen
+              </span>
+            </div>
+          </div>
+          <div class="card-footer pt-1 pb-0 d-flex flex-column justify-content-center" style="min-height: 3.6em;">
+            <h4 class="text-white" th:utext="#{demel.browse.home.box.attestation}">Belegte Formen</h4>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-4 col-xl mb-4">
+        <div class="card ir-clickable-card text-center" th:data-url="@{/browse/bibliography}"
+          onclick="window.location.href=this.dataset.url">
+          <div style="position: relative" class="d-none d-lg-block">
+            <img class="card-img-top" th:src="@{/images/home/box_with_plate.jpg}" alt="[Bild]">
+            <div class="d-flex flex-column justify-content-center"
+              style="position: absolute; top: 36%; bottom: 37%; width: 100%; font-family: 'Arial Narrow'; line-height: 105%">
+              <span th:text="#{demel.browse.home.box.bibliography}">Bibliografie</span>
+            </div>
+          </div>
+          <div class="card-footer pt-1 pb-0 d-flex flex-column justify-content-center" style="min-height: 3.6em;">
+            <h4 class="text-white" th:text="#{demel.browse.home.box.bibliography}">Bibliografie</h4>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-4 col-xl mb-4">
+        <div class="card ir-clickable-card text-center" th:data-url="@{/site/fichero}"
+          onclick="window.location.href=this.dataset.url">
+          <div style="position: relative" class="d-none d-lg-block">
+            <img class="card-img-top" th:src="@{/images/home/box_with_plate.jpg}" alt="[Bild]">
+            <div class="d-flex flex-column justify-content-center"
+              style="position: absolute; top: 36%; bottom: 37%; width: 100%; font-family: 'Arial Narrow'; line-height: 105%">
+              <span th:utext="#{demel.browse.home.box.zettelkasten}">Zettelkasten</span>
+            </div>
+          </div>
+          <div class="card-footer pt-1 pb-0 d-flex flex-column justify-content-center" style="min-height: 3.6em;">
+            <h4 class="text-white" th:utext="#{demel.browse.home.box.zettelkasten}">Zettelkasten</h4>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <footer th:replace="~{fragments/page :: footer}"></footer>
+  <script th:replace="~{fragments/page :: script_footer}"></script>
+  <script type="text/javascript">
+    documentReady(function() {
+	  initPopovers();
+    });
+  </script>
+</body>
+</html>

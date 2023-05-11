@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<!--/*
+ * This file is part of the DEMel web application.
+ * 
+ * Copyright 2023
+ * DEMel project team, Rostock University, 18051 Rostock, Germany
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */-->
+ <html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+<title th:text="#{demel.site.__${site_code}__.title}">Website</title>
+<meta th:replace="~{fragments/page :: html_header}" />
+<script th:src="@{/webjars/tinymce/tinymce.min.js}"></script>
+<link rel="stylesheet" th:href="@{/javascript/tocbot/4.21.0/tocbot.css}" th:if="${show_toc}">
+</head>
+<body class="ir-body">
+  <nav th:replace="~{fragments/page :: top_navigation}"></nav>
+  <header th:replace="~{fragments/page :: header (navActive='nav-main-__${site_code}__')}"></header>
+  <nav th:replace="~{fragments/page :: navigation (navActive='nav-main-__${site_code}__')}">...</nav>
+  <main class="ir-main container">
+    <div class="row mb-2">
+      <div class="col">
+        <h2>   <span th:if="${site_code == 'fichero'}" class="text-dark pe-2 h4 ps-2" style="cursor:pointer;position:relative; top:-2px" 
+                     data-bs-html="true" data-object-type="lemma" data-bs-placement="left" 
+                     th:data-bs-title="#{demel.site.__${site_code}__.info.title}" 
+                     th:data-bs-content="#{demel.site.__${site_code}__.info.content}" 
+                     data-bs-toggle="popover-help"><i class="fa-regular fa-circle-question"></i></span>
+                <span th:utext="#{demel.site.__${site_code}__.headline}">Überschrift</span>
+        </h2>
+      </div>
+    </div>
+    <div class="row" id="the_content">
+      <div class="col-12 col-lg-3" style="position:relative" th:if="${show_toc}">
+        <div style="position:sticky;top:30px;height:calc(100vh - 60px);overflow:auto">
+          <nav class="toc" id="pre_nav" th:unless="${#lists.isEmpty(pre_nav)}">
+            <ul class="toc-list">
+               <li class="toc-list-item" th:each="code : ${pre_nav}">
+                  <a class="toc-link" th:href="@{/site/__${code}__}" th:utext="#{demel.site.navigation.entry.__${code}__}"></a>
+               </li>
+            </ul>
+          </nav>
+          <nav th:class="${'js-toc toc demel-toc-' + site_code}"></nav>
+          <nav class="toc" id="post_nav" th:unless="${#lists.isEmpty(post_nav)}">
+            <ul class="toc-list">
+               <li class="toc-list-item" th:each="code : ${post_nav}">
+                  <a class="toc-link" th:href="@{/site/__${code}__}" th:utext="#{demel.site.navigation.entry.__${code}__}"></a>
+               </li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+      <div class="col-12 col-lg-9">
+      <div class=" js-toc-content">
+        <div sec:authorize="hasRole('ROLE_WEBEDITOR')">
+          <button th:id="btn-edit-__${site_code}__" class="btn btn-info float-end ms-3 mb-3" type="button" data-bs-toggle="collapse" 
+                  th:title="#{demel.common.editor.button.edit_website}" 
+                  th:attr="data-bs-target=${'#form-' + site_code}"><i class="fa-solid fa-pen-to-square"></i></button>
+          <div th:id="form-__${site_code}__" class="collapse">
+          <form th:action="@{/site/__${site_code}__}" method="post">
+            <input type="hidden" name="lang" th:value="${site_lang}">
+            <textarea th:id="editor-__${site_code}__" name="text" th:utext="${site_text}" rows="10">
+                This is the textarea for the web editor.
+            </textarea>
+            <script type="text/javascript">
+              documentReady(function(){
+                document.querySelector('#form-[[${site_code}]]').addEventListener('hidden.bs.collapse', function () {
+                  document.querySelector('#btn-edit-[[${site_code}]]').classList.remove("d-none");
+                });
+                document.querySelector('#form-[[${site_code}]]').addEventListener('shown.bs.collapse', function () {
+                  document.querySelector('#btn-edit-[[${site_code}]]').classList.add("d-none");
+                });
+                
+                let lang = document.getElementById('languageSelector').dataset.currentLang;
+                if(lang=='en') { // default
+                  lang = null; 
+                }
+                tinymce.init({
+                  selector: '#editor-[[${site_code}]]',
+                  language: lang,
+                  language_url : '/javascript/tinymce/languages/' + lang + '.js',
+                  height: 500,
+                  promotion:false,
+                  relative_urls : false,
+                  plugins: [
+                    'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+                    'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                    'insertdatetime', 'media', 'table', 'help', 'wordcount'
+                  ],
+                  toolbar: 'undo redo | blocks | ' +
+                    'bold italic removeformat | ' + 
+                    'alignleft aligncenter alignright alignjustify | ' +
+                    'bullist numlist | ' +
+                    'code | help',
+                  extended_valid_elements: '#i[*]',
+                  content_css: ['writer', '[[@{/webjars/font-awesome/css/all.css}]]']
+
+                  //CKEDITOR.config.allowedContent = true;  -> ??
+                  //CKEDITOR.config.fillEmptyBlocks = false -> ??;
+                  //CKEDITOR.dtd.$removeEmpty.i= false;  -> OK
+                  //CKEDITOR.replace('editor-[[${site_code}]]',{
+                  //  format_tags : 'p;h2;h3;h4;h5;h6;pre'
+                });
+             });
+            </script>
+            <button class="btn btn-primary float-end me-5 mt-3" type="submit" name="save">
+              <i class="fa-solid fa-floppy-disk"></i>
+              <span th:text="#{demel.common.editor.button.save}">Speichern</span>
+            </button>
+            <button class="btn btn-danger ms-5 mt-3" type="submit" name="cancel">
+              <i class="fa-solid fa-xmark"></i>
+              <span th:text="#{demel.common.editor.button.cancel}">Abbrechen</span>
+            </button>
+          </form>
+          <div class="my-4"><hr style="height:2px;background-color: gray;border: none;" /></div>
+          </div>
+        </div>
+        <div id="demel_content" class="demel-text-justify" th:utext="${site_text}"></div>
+        <div id="demel_spacer2bottom"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <footer th:replace="~{fragments/page :: footer}"></footer>
+  <script th:replace="~{fragments/page :: script_footer}"></script>
+  <script th:src="@{/javascript/demel.js}" th:if="${site_code == 'fichero'}"></script>
+  <script th:src="@{/javascript/demel_boxes.js}" th:if="${site_code == 'fichero'}"></script>
+  <script th:src="@{/javascript/tocbot/4.21.0/tocbot.js}" th:if="${show_toc}"></script>
+  <script th:if="${show_toc}" type="text/javascript" th:inline="javascript">
+    documentReady(function() {
+      let content = document.querySelector('.js-toc-content')
+      let headings = content.querySelectorAll('h1, h2, h3, h4, h5, h6, h7')
+      let headingMap = {}
+
+      Array.prototype.forEach.call(headings, function (heading) {
+        let id = heading.id ? heading.id : heading.textContent.trim().toLowerCase()
+          .split(' ').join('-').replace(/[\!\@\#\$\%\^\&\*\(\)\:]/ig, '');
+        headingMap[id] = !isNaN(headingMap[id]) ? ++headingMap[id] : 0;
+        if (headingMap[id]) {
+          heading.id = id + '-' + headingMap[id];
+        } else {
+          heading.id = id;
+        }
+      });
+
+      tocbot.init({
+        // Where to render the table of contents.
+        tocSelector: '.js-toc',
+        // Where to grab the headings to build the table of contents.
+        contentSelector: '.js-toc-content',
+        // Which headings to grab inside of the contentSelector element.
+        headingSelector: 'h2, h3, h4, h5',
+        // For headings inside relative or absolute positioned containers within content.
+        hasInnerContainers: true,
+        orderedList: false,
+        collapseDepth: /*[(${#strings.defaultString(#messages.msgOrNull('demel.site.__${site_code}__.toc.collapse_depth'),'3')})]*/"",
+        includeHtml:true,
+        onClick: function(e) {
+          tocExecution(e);
+        }
+      });
+    });
+
+    function tocExecution(event) {
+      let externalLinks = ['intro_overview','intro_history','intro_process','intro_principles','intro_manual','intro_people','intro_related','intro_literature','intro_release','intro_citation'];
+      //disable tocbot scrolling by setting class "no-smooth-scroll"
+      //scroll via window.location.href and tocbot.refresh();
+      event.target.classList.add("no-smooth-scroll");
+      //get the closest parent <a> element
+      let srcElemA = event.srcElement.closest('a'); 
+      let target = srcElemA.getAttribute('href').substring(1);
+      if (externalLinks.includes(target)) {
+        window.location.href=target+"#"+target;
+      }
+      else{
+        window.location.href = "#" + target;
+        tocbot.refresh();
+      }
+    }
+    
+
+    windowReady(function(){
+      fillTheBottomGap();
+    });
+
+    // Wenn der letzte Abschnitt zu "kurz" ist, macht tocbot Probleme.
+    // Das setzen des aktuellen Eintrags funktioniert nicht, 
+    // weil am Anfang des sichtbaren Bereichs im Browser noch ein vorhergehender Abschnitt gültig ist.
+    // Deshalb soll am letzten Element <div id="demel_spacer2bottom"> in site.html 
+    // das Style-Attribut min-height gesetzt werden.
+    // Die Höhe berechnet sich aus der Fensterhöhe abzgl. der Höhen aller HTML-Elemente
+    // nach dem letzten Überschriftenelement (h1-h6) auf der Seite.
+    function fillTheBottomGap(){
+      let headingElems = document.getElementById("demel_content").querySelectorAll("h1:not(.js-toc-ignore),h2:not(.js-toc-ignore),h3:not(.js-toc-ignore),h4:not(.js-toc-ignore),h5:not(.js-toc-ignore),h6:not(.js-toc-ignore");
+      if(headingElems.length > 0 && document.getElementById("demel_spacer2bottom") != null){
+        let lastElem = headingElems.item(headingElems.length-1);
+        let h = window.innerHeight 
+          - document.querySelector("footer").clientHeight 
+          - parseInt(window.getComputedStyle(document.querySelector("footer")).getPropertyValue("margin-top"));
+        do {
+          h = h - lastElem.clientHeight;
+          lastElem = lastElem.nextElementSibling;
+        } while (lastElem != null);
+        if(h > 0) {
+          document.getElementById("demel_spacer2bottom").style.minHeight = `${h}px`;
+        }
+      }
+    }
+  </script>
+  <script type="text/javascript" th:inline="javascript">
+    documentReady(function() {
+      console.log(window.location.href.includes('site/fichero'));
+      if(window.location.href.includes('site/fichero')) {
+        let i18n = {
+            demel_fichero_doro_tooltip      : /*[[#{demel.site.fichero.doro.tooltip}]]*/"",
+            demel_fichero_dfgviewer_tooltip : /*[[#{demel.site.fichero.dfgviewer.tooltip}]]*/"",
+            demel_vocabulary_box            : /*[[#{demel.vocabulary.demel__objecttype.box.term}]]*/"", 
+            demel_citelink                  : /*[[#{demel.popover.cite.citelink}]]*/""
+        }
+        createBoxDetails(i18n);
+        initChevronToggle();
+      } else{
+        initPopovers();
+      }
+      /*
+      //since some of the element ids are created automatically by toc-bot,
+      //we need to execute an extra scroll 
+      setTimeout(function() {
+        let anchor = (document.URL.split('#').length > 1) ? document.URL.split('#')[1] : null;
+        
+        if(anchor != null && anchor.length > 0) {
+        	window.location = "#"+anchor;
+         // let element_to_scroll_to = document.getElementById(decodeURIComponent(anchor));
+         // element_to_scroll_to.scrollIntoView();
+        }
+      }, 500);
+      */
+    });
+  </script>
+</body>
+</html>

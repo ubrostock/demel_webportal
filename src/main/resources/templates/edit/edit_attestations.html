@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<!--/*
+ * This file is part of the DEMel web application.
+ * 
+ * Copyright 2023
+ * DEMel project team, Rostock University, 18051 Rostock, Germany
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */-->
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org"
+  xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+<title th:text="#{demel.attestation_editor.title}">Belegte Formen</title>
+<meta th:replace="~{fragments/page :: html_header}" />
+<style>
+div#row_source div.input-group {
+	height: 4.3em !important;
+}
+
+div#row_source span.select2-selection {
+	height: 4em !important;
+}
+
+div#row_source span.select2-selection__rendered {
+	line-height: initial;
+}
+</style>
+</head>
+<body class="ir-body">
+  <nav th:replace="~{fragments/page :: top_navigation}"></nav>
+  <header th:replace="~{fragments/page :: header (navActive='nav-main-home')}"></header>
+  <nav th:replace="~{fragments/page :: navigation (navActive='nav-main-home')}">...</nav>
+  <main class="ir-main container" sec:authorize="hasRole('ROLE_EDITOR')">
+    <div class="row mb-4">
+      <div class="offset-1 col-10">
+        <form id="attestation_form" name="attestation_form" th:action="@{/edit/attestation}" th:object="${att_edit}"
+          method="POST">
+          <input type="hidden" name="query_params" th:value="${query_params}" /> <input type="hidden" name="return_url"
+            th:value="${return_url}" /> <input type="hidden" th:field="*{id}" />
+          <div class="alert alert-danger"
+            th:if="${#lists.size(#fields.errors()) - #lists.size(#fields.globalErrors()) > 0}"
+            th:text="#{demel.common.editor.error.correct_input}">Bitte korrigieren Sie die fehlerhaften
+            Eingabefelder!</div>
+          <div class="card border border-primary">
+            <h4 class="card-header ">
+              <button type="button" th:title="#{demel.common.editor.button.close}" class="btn-close float-end"
+                aria-label="Close" onclick="window.location.href=document.attestation_form.return_url.value">&times;</button>
+              <span class="h3" th:text="${att_orig.typeSymbol}">Typesymbol</span> <span
+                th:text="#{demel.attestation_editor.headline}">Beleg bearbeiten</span> <span class="text-secondary">(
+                <span th:text="#{demel.attestation_editor.form.id}">ID:</span> <span th:text="*{id}">123456</span>, <span
+                th:text="#{demel.attestation_editor.type}">Typ:</span> <span
+                th:text="#{demel.vocabulary.attestation\_\_type.__${att_orig.type}__.term}">123456</span> )
+              </span>
+            </h4>
+            <div class="card-body border-secondary border-bottom" style="position: relative;">
+              <div class="pe-3 pb-3" style="position: absolute; bottom: 0; right: 0; z-index: 1;">
+                <a sec:authorize="hasRole('ROLE_MANAGER')" th:href="@{/api/indexing/attestations/reindex/__*{id}__}"
+                  class="btn btn-secondary p-1 float-end" th:title="#{demel.common.solr_update.button.title}"> <img
+                  th:src="@{/images/Apache_Solr_logo_white.svg}" style="height: 1.25em" /> <small
+                  th:text="#{demel.common.solr_update.button}">Update</small>
+                </a>
+              </div>
+              <div id="row_form" class="row mb-3" th:if="${#lists.contains(view_area, 'FORM')}">
+                <div class="col-6">
+                  <div class="row">
+                    <div class="col-4">
+                      <label
+                        th:replace="~{fragments/form :: form_label_with_info (i18nPrefix='demel.attestation_editor.form')}"></label>
+                    </div>
+                    <div class="col-8">
+                      <input class="form-control" type="text" id="input_form" th:field="*{form}"
+                        th:errorclass="is-invalid" /> <span class="invalid-feedback"
+                        th:each="err : ${#fields.errors('form')}" th:text="#{__${err}__}"></span>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="pt-2" th:if="${#lists.contains(view_area, 'FORM')}">
+                    <span th:text="${att_orig.form}" class="text-muted pt-1"></span>
+                  </div>
+                </div>
+              </div>
+              <div id="row_lemma" class="row mb-3" th:if="${#lists.contains(view_area, 'LEMMA')}">
+                <div class="col-6">
+                  <div class="row">
+                    <div class="col-4">
+                      <label
+                        th:replace="~{fragments/form :: form_label_with_info (i18nPrefix='demel.attestation_editor.lemma')}"></label>
+                    </div>
+                    <div class="col-8">
+                      <div id="input_group_select_Lemma" class="input-group">
+                        <select class="form-control form-control-sm" id="select_lemma" th:field="*{lemmaId}"
+                          th:data-option-value="*{lemmaId}" th:data-option-html="${lemma_html_edit}"
+                          th:errorclass="is-invalid">
+                        </select> <span id="select_lemma_info" class="h4 input-group-text" style="cursor: pointer"
+                          data-bs-html="true" data-bs-content=" " data-bs-toggle="popover-info" data-object-type="lemma"
+                          th:data-object-id="*{lemmaId}"> <i class="fa-regular fa-eye"></i></span>
+                      </div>
+                      <span class="invalid-feedback" th:each="err : ${#fields.errors('lemmaId')}"
+                        th:text="#{__${err}__}"></span>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="row">
+                    <div class="col pt-2">
+                      <span id="select_lemma_info_orig" class="text-muted float-end" style="cursor: pointer"
+                        data-bs-html="true" data-bs-content=" " data-bs-toggle="popover-info" data-object-type="lemma"
+                        th:data-object-id="${att_orig.lemmaId}"> <i class="fa-regular fa-eye"></i></span> <span
+                        th:if="${lemma_html_orig}" th:utext="${lemma_html_orig}" class="text-muted"></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div id="row_source" class="row" th:if="${#lists.contains(view_area, 'SOURCE')}">
+                <div class="col-6">
+                  <div class="row">
+                    <div class="col-4">
+                      <label
+                        th:replace="~{fragments/form :: form_label_with_info (i18nPrefix='demel.attestation_editor.sigle')}"></label>
+                    </div>
+                    <div class="col-8">
+                      <div id="input_group_select_source" class="input-group">
+                        <select class="form-control form-control-sm" id="select_source" th:field="*{sourceId}"
+                          th:data-option-value="*{sourceId}" th:data-option-html="${source_html_edit}"
+                          th:errorclass="is-invalid">
+                        </select> <span id="select_source_info" class="h4 input-group-text" style="cursor: pointer"
+                          data-bs-html="true" data-bs-content=" " data-bs-toggle="popover-info"
+                          data-object-type="source" th:data-object-id="*{sourceId}"> <i class="fa-regular fa-eye"></i></span>
+                      </div>
+                      <span class="invalid-feedback" th:each="err : ${#fields.errors('sourceId')}"
+                        th:text="#{__${err}__}"></span>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="row">
+                    <div class="col">
+                      <span id="select_source_info_orig" class="text-muted float-end" style="cursor: pointer"
+                        data-bs-html="true" data-bs-content=" " data-bs-toggle="popover-info" data-object-type="source"
+                        th:data-object-id="${att_orig.sourceId}"> <i class="fa-regular fa-eye"></i></span>
+                      <div th:if="${source_html_orig}" th:utext="${source_html_orig}" class="text-muted"
+                        style="line-height: initial"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-body">
+              <div class="row mb-3">
+                <div class="col-6">
+                  <div class="row mb-3" th:if="${#lists.contains(view_area, 'DATING')}">
+                    <div class="col-4">
+                      <label
+                        th:replace="~{fragments/form :: form_label_with_info (i18nPrefix='demel.attestation_editor.dating_attestation')}"></label>
+                    </div>
+                    <label for="inputDateText" class="col-2 form-label"
+                      th:text="#{demel.attestation_editor.dating_attestation.text}">Text:</label>
+                    <div class="col-6 mb-2">
+                      <input type="text" th:field="*{datingDisplay}" class="form-control" id="inputDateText"
+                        onblur="guessDateFromTo()" th:errorclass="is-invalid"> <span class="invalid-feedback"
+                        th:each="err : ${#fields.errors('datingDisplay')}" th:text="#{__${err}__}"></span>
+                    </div>
+                    <label for="inputDateFrom" class="col-2 offset-4 form-label pe-0"
+                      th:text="#{demel.attestation_editor.dating_attestation.from_to}">von/bis:</label>
+                    <div class="col-3">
+                      <input type="number" th:field="*{datingFrom}" class="form-control pe-1" id="inputDateFrom"
+                        th:errorclass="is-invalid">
+                    </div>
+                    <div class="col-3">
+                      <input type="number" th:field="*{datingTo}" class="form-control pe-1" id="inputDateTo"
+                        th:errorclass="is-invalid">
+                    </div>
+                    <div class="col-8 offset-4">
+                      <span class="invalid-feedback d-block" th:each="err : ${#fields.errors('datingFrom')}"
+                        th:text="#{__${err}__}"></span> <span class="invalid-feedback d-block"
+                        th:each="err : ${#fields.errors('datingTo')}" th:text="#{__${err}__}"></span>
+                    </div>
+                    <div class="col-8 offset-4 form-label text-muted mt-2">
+                      <span th:utext="${att_orig.datingDisplay}">1225-1275</span> <span class="text-nowrap"> (<span
+                        th:text="${att_orig.datingFrom}">1225</span> - <span th:text="${att_orig.datingTo}">1225-1275</span>)
+                      </span>
+                    </div>
+                  </div>
+                  <div class="row mb-3" th:if="${#lists.contains(view_area, 'MULTIWORDEXPR')}">
+                    <div class="col-4">
+                      <label
+                        th:replace="~{fragments/form :: form_label_with_info (i18nPrefix='demel.attestation_editor.mwexpr')}"></label>
+                    </div>
+                    <div class="col-8">
+                      <input type="text" class="form-control" th:field="*{multiwordexpr}" th:errorclass="is-invalid" />
+                      <span class="invalid-feedback" th:each="err : ${#fields.errors('multiwordexpr')}"
+                        th:text="#{__${err}__}"></span>
+                    </div>
+                    <div class="col-8 offset-4 form-label mt-2">
+                      <span class="text-muted ms-2" th:text="${att_orig.multiwordexpr}"></span>
+                    </div>
+                  </div>
+
+                  <div class="row mb-3" th:if="${#lists.contains(view_area, 'LEMMALINK')}">
+                    <div class="col-4">
+                      <label
+                        th:replace="~{fragments/form :: form_label_with_info (i18nPrefix='demel.attestation_editor.lemmalink_id')}"></label>
+                    </div>
+                    <div class="col-8">
+                      <div class="input-group">
+                        <select class="form-control form-control-sm" id="select_lemmalink" th:field="*{lemmalinkId}"
+                          th:data-option-value="*{lemmalinkId}" th:data-option-html="${lemmalink_html_edit}"
+                          th:errorclass="is-invalid">
+                        </select> <span id="select_lemmalink_info" class="h4 input-group-text" style="cursor: pointer"
+                          data-bs-html="true" data-bs-content=" " data-bs-toggle="popover-info" data-object-type="lemma"
+                          th:data-object-id="*{lemmalinkId}"> <i class="fa-regular fa-eye"></i></span>
+                      </div>
+                      <span class="invalid-feedback" th:each="err : ${#fields.errors('lemmalinkId')}"
+                        th:text="#{__${err}__}"></span>
+                    </div>
+                    <div class="col-8 offset-4 form-label mt-2">
+                      <span id="select_lemmalink_info" class="text-muted float-end me-2 pe-1" style="cursor: pointer"
+                        data-bs-html="true" data-bs-content=" " data-bs-toggle="popover-info" data-object-type="lemma"
+                        th:data-object-id="${att_orig.lemmalinkId}"> <i class="fa-regular fa-eye"></i></span> <span
+                        class="text-muted ms-2" th:utext="${lemmalink_html_orig}"></span>
+                    </div>
+                  </div>
+                  <div class="row mb-3" th:if="${#lists.contains(view_area, 'HINTS_INTERN')}">
+                    <div class="col-4">
+                      <label
+                        th:replace="~{fragments/form :: form_label_with_info (i18nPrefix='demel.attestation_editor.hints_intern')}"></label>
+                    </div>
+                    <div class="col-8">
+                      <textarea rows="3" th:field="*{hintsIntern}" class="form-control" th:errorclass="is-invalid"></textarea>
+                      <span class="invalid-feedback" th:each="err : ${#fields.errors('hintsIntern')}"
+                        th:text="#{__${err}__}"></span>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div id="zettel"></div>
+                </div>
+              </div>
+              <div class="row mb-3">
+                <div class="col-2">
+                  <label
+                    th:replace="~{fragments/form :: form_label_with_info (i18nPrefix='demel.attestation_editor.revision_message')}"></label>
+                </div>
+                <div class="col-10">
+                  <textarea id="ta_revision_message" name="revision_message" th:text="${revision_message}"
+                    class="form-control"></textarea>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-footer">
+              <div class="row">
+                <div class="col-sm-6">
+                  <button class="btn btn-dark" type="reset">
+                    <i class="fa-solid fa-eraser"></i> <span th:text="#{demel.common.editor.button.reset_form}">Formular
+                      zurücksetzen</span>
+                  </button>
+                </div>
+                <div class="col-sm-6 text-end">
+                  <button id="submit_button" class="btn btn-primary float-end" type="submit"
+                    th:text="#{demel.common.editor.button.save}">Speichern</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+  <footer th:replace="~{fragments/page :: footer}"></footer>
+  <script th:replace="~{fragments/page :: script_footer}"></script>
+
+  <!-- /* Elevate Zoom (Image viewer) */-->
+  <script th:src="@{/javascript/elevatezoom-plus_1.2.5/jquery.ez-plus.min.js}"></script>
+  <script type="text/javascript" th:inline="javascript" sec:authorize="hasRole('ROLE_EDITOR')">
+    documentReady(function() {
+      initPopovers();
+      
+      document.getElementById('attestation_form').onsubmit = (evt) => {
+        guessDateFromTo();
+        let c = trimTinyMCEContent(tinymce.get("ta_revision_message").getContent());
+        tinymce.get("ta_revision_message").setContent(c);
+        document.querySelector("textarea#ta_revision_message").value = c;
+        document.getElementById("submit_button").disabled = true;
+        document.getElementById("submit_button").textContent = /*[[#{demel.common.form.submit.wait}]]*/"";
+      };
+      
+      document.getElementById('attestation_form').onreset = (evt) => {
+        document.querySelectorAll('#select_lemma,#select_source,#select_lemmalink').forEach((s) => {
+          s.querySelectorAll('option').forEach((o) => {
+            o.selected = o.defaultSelected;
+          });
+          $(s).trigger('change.select2');
+        });
+      };
+      
+      let baseURL = '[(@{/})]';
+      let attestationID = /*[[${att_orig.id}]]*/"";
+      let scanIDString =  /*[[${#strings.listJoin(att_orig.scanIDs,'|')}]]*/"";
+      let scanIDs =  scanIDString.split("|");
+      let htmlContainer = document.querySelector('#zettel');
+      let i18n = {
+        'demel_attestations_scans_button_close':           /*[[#{demel.attestations.scans.button.close}]]*/"",
+        'demel_attestations_scans_button_other_attestations': /*[[#{demel.attestations.scans.button.other_attestations}]]*/"",
+        'demel_attestations_scans_button_enlarge':         /*[[#{demel.attestations.scans.button.enlarge}]]*/"",
+        'demel_attestations_scans_button_rotate':          /*[[#{demel.attestations.scans.button.rotate}]]*/"",
+        'demel_attestations_table_scan':  /*[[#{demel.attestations.table.scan}]]*/"", 
+        'demel_javascript_json_data':   /*[[#{demel.javascript.json_data}]]*/"",
+        'demel_javascript_citelink':    /*[[#{demel.popover.cite.citelink}]]*/""
+      };
+
+      displayScans(htmlContainer, i18n, baseURL, attestationID, scanIDs);
+
+      initSelect2('select_lemma', 'api/searchbox/lemmas_in_atts_editor');
+      initSelect2('select_source', 'api/searchbox/sources_in_atts_editor');
+      initSelect2('select_lemmalink', 'api/searchbox/lemmas_in_atts_editor');
+
+      initTinyMCERevisionMessage("ta_revision_message");
+      
+      document.querySelector("nav.ir-nav-main").scrollIntoView();
+      document.getElementById("inputDateText")?.select();
+      initPopovers();
+    });
+
+    function guessDateFromTo(){
+      if(document.getElementById('inputDateText')){
+        let dateStr = document.getElementById('inputDateText').value;
+        if (Number.isInteger(Number(dateStr))) {
+          document.getElementById('inputDateFrom').value = dateStr;
+          document.getElementById('inputDateTo').value = dateStr;
+        }
+      }
+      return true;
+    }
+
+    function initSelect2(htmlId, selectBoxUrl){
+      let htmlSelect = document.getElementById(htmlId);
+      if(htmlSelect != null) {
+        let baseUrl = '[(@{/})]';
+        let initial = [];
+        if(htmlSelect.dataset.optionValue){
+           initial = [{id: htmlSelect.dataset.optionValue, text: htmlSelect.dataset.optionHtml}];
+        }
+        let s2 = $(htmlSelect).select2({
+          multiple: false,
+          maximumSelectionSize: 1,
+          dropdownAutoWidth:true,
+          //Wenn HTML im Option-Element angezeigt werden soll,
+          //muss die Select-Box muss über das data-Property initialisiert werden,
+          //HTML-Strukturen im <option>-Element werden entfernt
+          data: initial,
+          ajax : {
+            url : baseUrl + selectBoxUrl, 
+            processResults : function(data) {
+              return {
+                results : data.response,
+              };
+            }, delay : 250, allowClear : false
+          },
+          escapeMarkup: function(markup) {
+            return markup;
+          }
+        });
+        if(htmlSelect.classList.contains('is-invalid')) {
+          document.getElementById("select2-" + htmlId + "-container").parentElement.classList.add("form-control", "is-invalid");
+        }
+
+        s2.on('select2:select', function (e) {
+          document.getElementById(e.target.id + '_info').dataset.objectId = e.target.value;
+        });
+      }
+    }
+  </script>
+</body>
+</html>

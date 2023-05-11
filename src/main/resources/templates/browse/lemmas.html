@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<!--/*
+ * This file is part of the DEMel web application.
+ * 
+ * Copyright 2023
+ * DEMel project team, Rostock University, 18051 Rostock, Germany
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */-->
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org"
+  xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+<title th:text="#{demel.lemmas.title}">DEMel Lemario</title>
+<meta th:replace="~{fragments/page :: html_header}" />
+<script type="text/javascript" th:src="@{/javascript/demel.js}"></script>
+<script type="text/javascript" th:src="@{/javascript/demel_messages.js}"></script>
+<meta sec:authorize="hasRole('ROLE_EDITOR')" name="demel:role" content="ROLE_EDITOR" />
+<meta sec:authorize="hasRole('ROLE_MANAGER')" name="demel:role" content="ROLE_MANAGER" />
+<meta sec:authorize="hasRole('ROLE_MESSAGEEDITOR')" name="demel:role" content="ROLE_MESSAGEEDITOR" />
+</head>
+<body class="ir-body">
+  <nav th:replace="~{fragments/page :: top_navigation}"></nav>
+  <header th:replace="~{fragments/page :: header (navActive='nav-main-lemmas')}"></header>
+  <nav th:replace="~{fragments/page :: navigation (navActive='nav-main-lemmas')}">...</nav>
+  <main class="ir-main container">
+    <div class="row mb-2">
+      <div class="col-8 col-md-4 col-lg-3 pb-3">
+        <a id="btnCleanFilter" class="btn btn-sm btn-link pt-1 float-end d-none" style="cursor: pointer"
+          th:title="#{demel.common.clear_form_all}" th:href="@{/browse/lemmas}"> <i class="fa-solid fa-trash-can"></i>
+        </a>
+        <h2>
+          <span class="text-dark pe-1 h4 ps-2" style="cursor: pointer; position: relative; top: -2px"
+            data-bs-html="true" data-object-type="lemma" data-bs-placement="left"
+            th:data-bs-title="#{demel.lemmas.info.title}" th:data-bs-content="#{demel.lemmas.info.content}"
+            data-bs-toggle="popover-help"><i class="fa-regular fa-circle-question"></i></span> <span
+            th:text="#{demel.lemmas.heading}">Lemmaliste</span>
+        </h2>
+      </div>
+
+      <div class="d-block d-md-none col-4 text-end">
+        <div th:insert="~{fragments/togglebuttons :: togglebutton_filter}"></div>
+      </div>
+
+    </div>
+    <div class="row">
+      <div class="col-8 col-md-4 col-lg-3 pb-3">
+
+        <div id="facetInfo" class="demel-search collapse">
+          <form id="lemma_form" name="lemma_form" th:action="@{/browse/lemmas}" method="GET">
+            <!--/* this is the default submit button, which does nothing */-->
+            <button class="d-none" type="submit"></button>
+            <input id="prefix" type="hidden" name="prefix" th:value="${prefix}" />
+            <button id="btn_clear_prefix" class="d-none" type="submit" name="action" th:value="'del:prefix:*'"></button>
+
+            <input type="hidden" name="filter" th:value="'published'"
+              th:unless="${showDeleted or #authorization.expression('isAuthenticated()')}">
+
+            <div th:insert="~{fragments/searchbox :: searchbox (name='lemma', formId='lemma_form')}"></div>
+
+            <div class="card demel-searchbox border border-secondary mt-3">
+              <div th:replace="~{fragments/form :: filter_card_header (name='type', form='lemma_form')}"></div>
+              <div class="card-body px-2">
+                <th:block th:each="opt : ${T(de.uni.rostock.demel.data.model.dictionary.Lemma.LemmaType).values()}">
+                  <div
+                    th:replace="~{fragments/form :: checkbox4facet (name='type', value='__${opt.value}__', form='lemma_form',
+                                   symbol='__${opt.symbol}__',
+                                   symbol_css='top: -0.2em;height:1.2em', 
+                                   badge_css='top:.2em; width:4em;height:1.2em')}"></div>
+                </th:block>
+              </div>
+            </div>
+
+            <div class="card demel-searchbox border border-secondary mt-3">
+              <div th:replace="~{fragments/form :: filter_card_header (name='part_of_speech', form='lemma_form')}"></div>
+              <div class="card-body ps-0">
+                <section th:insert="~{fragments/form :: checkboxtree}"
+                  th:with="cbt=${cbtPartOfSpeech}, name='part_of_speech', form='lemma_form', objectType='lemma'"></section>
+              </div>
+            </div>
+
+            <div th:replace="~{fragments/form  :: message_filter('lemma_form')}"></div>
+          </form>
+        </div>
+      </div>
+      <div class="col-12 col-md-8 col-lg-9">
+        <div class="btn-group mb-3">
+          <div>
+            <span class="pe-1"
+              th:each="value : ${#strings.arraySplit('a|b|c|ch|ç|d|e|f|g|h|i|j|k|l|ll|m|n|ñ|o|p|q|r|s|t|u|v|w|x|y|z', '|')}">
+              <label th:id="${'facet-prefix-'+value}" class="btn btn-outline-primary"
+              style="padding: 0.15em 0.33em; cursor: pointer"
+              th:classappend="${#lists.contains(prefix, value)}? 'active' : ''"> <!--/*multiple Selects: th:checked="${#lists.contains(start, value)}"*/-->
+                <input class="d-none" type="checkbox" th:value="${value}"
+                onclick="document.querySelector('#prefix').value = this.value; document.lemma_form.submit();"
+                th:text="${value}">
+            </label>
+            </span>
+            <button class="float-end btn btn-sm btn-link pt-1" type='button' th:title="#{demel.common.clear_form}"
+              onclick="document.querySelector('#btn_clear_prefix').click();">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+        </div>
+        <div id="demel-no-data" class="card border border-primary d-none">
+          <div class="card-header h3" th:text="#{demel.lemmas.searchresult_empty}">Keine Lemmata gefunden.</div>
+        </div>
+        <div id="demel-show-data" style="position: relative">
+          <table id="datatable_lemmas" class="display table table-sm table-borderless table-striped" style="width: 100%">
+            <colgroup>
+              <col style="width: 3em;" />
+              <col style="width: 2.5em;" />
+              <col />
+              <col style="width: 3em;" />
+              <col style="width: 3em;" />
+            </colgroup>
+
+            <thead class="bg-primary text-white invisible">
+              <tr style="font-size: 0px;">
+                <th>&nbsp;</th>
+                <th>&nbsp;</th>
+                <th>&nbsp;</th>
+                <th>&nbsp;</th>
+                <th>&nbsp;</th>
+              </tr>
+            </thead>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+  <footer th:replace="~{fragments/page :: footer}"></footer>
+  <script th:replace="~{fragments/page :: script_footer}"></script>
+  <script type="text/javascript" th:inline="javascript">
+    documentReady(function() {
+      let baseURL = /*[[@{/}]]*/"";
+      initPopovers();
+      let params= retrieveFormParams("#lemma_form");
+      
+      let table = new DataTable("#datatable_lemmas", {
+        pagingType: "input", // datatable plugin for input field "goto page"
+        processing: true,
+        serverSide: true,
+        lengthChange: false,
+        ordering: false,
+        searching: false, // table search off
+        iDisplayLength: 50,
+        scrollToTop: true,  //use scrollToTop Datatables plugin
+        rowId:  function(data) { return 'tr_' + data.id; },
+        language: {
+          url: document.getElementsByName('demel-baseurl')[0].getAttribute('content') + "javascript/datatables/" + /*[[#{datatables.lang}]]*/""
+        },
+        ajax: document.getElementsByName('demel-baseurl')[0].getAttribute('content') + "api/datatable/lemmas?" + params,
+        // https://stackoverflow.com/a/39409456
+        dom: `<'row demel-with-download'<'col d-xl-flex justify-content-between'<'mt-3'i><'mt-3'p>>>
+              <'row'<'col-12 mt-3'tr>>
+              <'row demel-with-download'<'col d-xl-flex justify-content-between'<'mt-3'i><'mt-3'p>>>`,
+              
+        createdRow: function( row, data, dataIndex ) {
+          if(data.status === "deleted"){
+            row.classList.add("demel-deleted-object");
+          }
+        },
+        
+        //necessary to remove order buttons from column 0 
+        //https://datatables.net/forums/discussion/21709/orderable-false-on-target-0-first-col-not-working-until-another-column-is-sorted       
+        columnDefs: [
+          { "name": "id",       "targets": 0, "orderable": false },
+          { "name": "type",     "targets": 1 },
+          { "name": "lemma",    "targets": 2, "className": "demel-td-lemma_info" },
+          { "name": "toggle",   "targets": 3, "className": "align-bottom py-2"  },
+          { "name": "messages", "targets": 4 }
+        ],
+        columns: [
+          {data: function (data, type,row, meta) {
+            let messageLemmalink = /*[[#{demel.vocabulary.lemma__type.linklemma.term}]]*/"";
+            let messageLemma = /*[[#{demel.vocabulary.lemma__type.lemma.term}]]*/"";
+            let btnEdit = "";
+            let spanId = "";
+            if(Array.from(document.querySelectorAll("meta[name='demel:role']")).find( m => m.content === "ROLE_EDITOR")) {
+              btnEdit = `<a href="/edit/lemma/${data.id}?query_params=${encodeURIComponent(params)}&return_url=${encodeURIComponent(window.location.href)}"
+                            class="btn btn-sm btn-info"> &#9998;</a>`;
+              spanId = `<br /><small class="ps-2"> ${data.id} </small><br />`
+            }
+            let btnCite = buttonCiteWithPopover(data.id, 'lemma', {label: data.type==='lemma' ? messageLemma : messageLemmalink, 
+                                                purl:/*[[#{demel.popover.cite.citelink}]]*/""});
+             return `<nobr>${btnCite}${btnEdit}</nobr>${spanId}`;
+          }},
+          { data: function (data, type,row, meta) {
+        	  let iconDeleted = (data.status === "deleted") ? "<span class='fs-2 text-danger pe-3' title='"+ (/*[[#{demel.lemma_form.table.deleted.tooltip}]]*/"") + "'><i class='fa-solid fa-ban'></i></span>" : "";
+        	  let spanSymbol = "<span class='fs-2' title='" + (/*[[#{demel.lemma_form.table.type.tooltip}]]*/"") + "'>" + data.typeSymbol + "</span>";
+        	  return `<nobr>${iconDeleted}${spanSymbol}</nobr>`;
+          }},
+          { data: function (data, type,row, meta) { // 0 ... name (display)
+            let lemmalink = data.type === 'linklemma' ? `<small class="ms-3">${data.htmlLemmalinks}</small>` : ``;
+            let i18nTitle = /*[[#{demel.parts.container_messages.button.toggle_messages}]]*/"";
+            let out = `<div id="lemma_line_${data.id}" class="demel-lemma_line collapse show" data-lemma-id="${data.id}">
+                         <h3 class="pt-2 pb-0">
+                           <span class="${(data.type === 'lemmalink') ? 'text-body' : ''}">${data.name}</span>
+                           <small class="ms-1 text-muted">${data.htmlPartOfSpeechsWithoutUnknown}</small>
+                             ${lemmalink}
+                         </h3>
+                       </div>
+                       <div id="lemma_info_${data.id}" class="collapse lemma-info" data-lemma-id="${data.id}">...</div>`;
+            return out;
+          }},
+          
+          //messages
+          { data: function (data, type, row, meta) {
+              let i18nTitle = /*[[#{demel.parts.container_messages.button.toggle_messages}]]*/"";
+              return createMessagesAreaToggleButton(data.id, data.doctype, i18nTitle, data.countMessagesPublished, data.countMessagesInreview, data.countMessages);
+          }},
+          { data: function (data, type, row, meta) {
+             let i18nTitle = /*[[#{demel.parts.container_messages.button.toggle_details}]]*/"";
+             return `<button type="button" class="demel-btn-show-detail btn btn-link btn-lg py-0 float-end collapsed" id="toggle_button_${data.id}" 
+                            data-lemma-id="${data.id}" data-bs-toggle="collapse" 
+                            data-bs-target="#lemma_info_${data.id}" title="${i18nTitle}"><i class="fa-regular fa-eye"></i></button>`
+          }}
+        ]
+      });
+
+      table.on( 'page.dt', function () {
+        //use Datatable scrollToTop plugin instead:
+        //document.querySelector("main").scrollIntoView();
+      });
+
+      table.on( 'preDraw', function () {
+        hidePopovers();
+        closeAllDetails();
+      });
+
+      table.on( 'draw', function () {
+        createDownloadMenu();
+        initObjectInfo('lemma');
+        initPopovers();
+
+        if (table.data().count()) {
+          document.getElementById('demel-no-data').classList.add('d-none');
+          document.getElementById('demel-show-data').classList.remove('d-none');
+          let i18n_show_all = {
+                  'btn_title_show_all':  /*[[#{demel.lemmas.button.show_all}]]*/"",
+                  'btn_title_close_all': /*[[#{demel.lemmas.button.close_all}]]*/"" };
+          let divTablePagination = document.getElementById('datatable_lemmas_paginate');
+          let pos = divTablePagination.style.display==="none" ? "afterend" : "beforeend"; 
+          divTablePagination.insertAdjacentHTML(pos, createButtonsShowAllCloseAll(divTablePagination.parentElement, i18n_show_all, 'fa-regular fa-eye', 'fa-regular fa-eye-slash'));
+        } else {
+          document.getElementById('demel-no-data').classList.remove('d-none');
+          document.getElementById('demel-show-data').classList.add('d-none');
+        }
+        
+        //show messages for deleted objects (simulated click on message button) 
+        //deactivated, because we also open the complete info box (= to much information)
+        //table.context[0].nTable.querySelectorAll('tr').forEach((tr) => {
+        //  if(tr.classList.contains('demel-deleted-object') && tr.id.startsWith('tr_')){
+        //    document.querySelector('#button_messages_'+tr.id.substring(3)).click();
+        //  }
+        //});
+      });
+
+      table.on('xhr', function () {
+        let json = table.ajax.json();
+        if(json) {
+          for (var f of json.facetPrefix) {
+            if(f.value == '#' || f.value == '{' || f.value == '*' || f.value == '') {
+              continue;
+            }
+            if(document.querySelector('#facet-prefix-'+f.value)){
+              document.querySelector('#facet-prefix-'+f.value).setAttribute('title', f.valueCount);
+            }
+          }
+          for (var f of json.facetGrammarInfo) {
+            document.querySelector('#facet-part_of_speech-'+f.value).innerText = f.valueCount;
+          }
+          for (var f of json.facetType) {
+            document.querySelector('#facet-type-'+f.value).innerText = f.valueCount;
+          }
+          //for (var f of json.facetSelectedGrammarInfo) {
+          //  document.querySelector(''#facet-selected-part_of_speech-'+f.value).innerText = f.valueCount;
+          //}
+
+          if(json.data.length == 0) {
+            if(document.querySelector('input#input_lemmas_term_0')) {
+              x = document.querySelector('input#input_lemmas_term_0').value;
+              if(x.indexOf('~1') == -1) {
+                document.querySelector("div#search-similiar-lemmas button").innerText = x.concat("~1");
+                document.querySelecotr("div#search-similiar-lemmas").classList.remove("d-none");
+              }
+            }
+          }
+        }
+      });
+
+      table.on('click', 'td.demel-td-lemma_info', function (e) {
+        let trId = e.currentTarget.parentNode.id;
+        let id=trId.substring(3);
+        if(document.getElementById('lemma_line_'+id).classList.contains('show')) {
+          let btn = document.getElementById('toggle_button_'+id);
+          btn.click();
+        }
+      });
+    }); //document.ready()
+
+    function createExtendedArea(id) {
+      //called from demel_messages.js
+      if(document.querySelector('#tr2_'+id) == null) {
+        let newtr = `<tr id="tr2_${id}" class="${document.getElementById('tr_'+id).classList} collapse">
+                       <td class="px-4 py-0" id="container_messages_${id}" colspan="5"></td>
+                     </tr>`;
+        document.getElementById('tr_' + id).insertAdjacentHTML("afterend", newtr);
+      }
+      bootstrap.Collapse.getOrCreateInstance("#tr2_"+id).show();
+    }
+
+    function createDownloadMenu() {
+      let i18nDownloadPopoverTitle = /*[[#{demel.lemma_form.download.info.title}]]*/"";
+      let i18nDownloadPopoverContent = /*[[#{demel.lemma_form.download.info.content}]]*/"";
+      document.querySelectorAll('.demel-download-menu').forEach((x) => {
+        x.remove();
+      });
+      let html = `
+        <div class="demel-download-menu d-inline-block float-start pe-3">
+          <div class="dropdown d-inline-block">
+            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownDownload" 
+                    style="height:2.2em;"
+                    title="[(#{demel.common.download.button.title})]" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="fa-solid fa-download"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownDownload">
+              <li><a class="dropdown-item" href="#" onclick="demelDownload('csv');">[(#{demel.common.download.button.dropdown.csv})]</a></li>
+              <li><a class="dropdown-item" href="#" onclick="demelDownload('json');">[(#{demel.common.download.button.dropdown.json})]</a></li>
+              <li><a class="dropdown-item" href="#" onclick="demelDownload('pdf');">[(#{demel.common.download.button.dropdown.pdf})]</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="#" onclick="demelDownload('url');">[(#{demel.common.download.button.dropdown.url})]</a></li>
+            </div>
+          </div>
+          <div class="demel-popover-help-download d-inline-block text-dark pe-3" style="cursor:pointer;transform: translate(0px, -0.33rem);" data-bs-html="true" 
+               data-object-type="source"
+               data-bs-placement="left" 
+               data-bs-title="${i18nDownloadPopoverTitle}" 
+               data-bs-content="${i18nDownloadPopoverContent}" data-bs-toggle="popover-help"><i class="fa-regular fa-circle-question"></i>
+          </div>
+        </div>`
+      ;
+      document.querySelectorAll('.demel-with-download .dataTables_info').forEach(x => x.insertAdjacentHTML('afterbegin', html));
+      document.querySelectorAll('.demel-popover-help-download').forEach((x) => {
+        bootstrap.Popover.getOrCreateInstance(x, createPopoverHelpOptions());
+      });
+    }
+
+    function demelDownload(format) {
+      if(format ==='url'){
+    	  let url=`${window.location.origin}/browse/lemmas?${retrieveFormParams("#lemma_form")}`;
+    	  showBookmarkURL(url);	
+      } else{
+    	  let url = "../api/data/" + format + "/lemmas?" + retrieveFormParams("#lemma_form");
+    	  window.open(url, '_download');
+      }
+    }
+  </script>
+  <script th:replace="~{fragments/form :: bookmark_url_javascript}"></script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<!--/*
+ * This file is part of the DEMel web application.
+ * 
+ * Copyright 2023
+ * DEMel project team, Rostock University, 18051 Rostock, Germany
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */-->
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<body>
+<div th:fragment="indexing(code, delay_ms)" class="card border border-primary">
+  <h4 class="card-header" th:text="#{demel.browse.admin.indexing.__${code}__}">Lemmata</h4>
+    <div class="card-body">
+      <p th:id="${'progressbar_'+ code + '_label'}" class="text-center mb-0">&nbsp;</p>
+      <div class="progress mb-3">
+        <div th:id="${'progressbar_'+ code}" class="progress-bar" style="width: 0;" role="progressbar"></div>
+      </div>
+      <p th:id="${'indexing_'+ code + '_start'}" class="invisible">
+        <span th:text="#{demel.browse.admin.indexing.start}">gestartet um:</span> <span class="output"></span>
+      </p>
+      <p th:id="${'indexing_'+ code + '_running'}" class="invisible">
+        <span th:text="#{demel.browse.admin.indexing.running}">Laufzeit:</span> <span class="output"></span>
+      </p>
+      <p th:id="${'indexing_'+ code + '_end'}" class="invisible mb-0">
+        <span th:text="#{demel.browse.admin.indexing.end}">beendet:</span> <span class="output"></span>
+      </p>
+    </div>
+    <div class="card-footer">
+      <a th:id="${'indexing_'+ code + '_start_btn'}" class="btn btn-success invisible" 
+         th:href="@{/api/indexing/__${code}__/start}">
+        <i class="fa-solid fa-play"></i> <span th:text="#{demel.browse.admin.indexing.btn.start}">Start</span>
+      </a>
+      <a th:id="${'indexing_'+ code + '_stop_btn'}" class="btn btn-danger float-end invisible" 
+         th:href="@{/api/indexing/__${code}__/stop}">
+        <i class="fa-solid fa-stop"></i> <span th:text="#{demel.browse.admin.indexing.btn.stop}">Stop</span>
+      </a>
+    </div>
+    <script type="text/javascript" th:inline="javascript">
+      documentReady(function() {
+        let code = /*[[${code}]]*/ "";
+        let delay_ms = /*[[${delay_ms}]]*/ "";
+        let progress = function (){
+          fetch(`${document.getElementsByName('demel-baseurl')[0].getAttribute('content')}api/indexing/${code}/status`)
+            .then((response) => response.json())
+            .then((data) => {
+              document.getElementById('progressbar_' + code).setAttribute('aria-valuemax', data.totalCount);
+              document.getElementById('progressbar_' + code).setAttribute('aria-valuenow', data.currentCount);
+              document.getElementById('progressbar_' + code).style.width = (data.currentCount * 100/data.totalCount) + '%';
+              document.querySelector('#indexing_' + code + '_start > span.output').innerHTML = data.startOutput;
+              document.querySelector('#indexing_' + code + '_running > span.output').innerHTML = data.durationOutput;
+              if(data.running) {
+                document.getElementById('progressbar_' + code + '_label').innerHTML = data.currentCount + ' / ' + data.totalCount;
+                document.getElementById('indexing_' + code + '_start_btn').classList.add('invisible');
+                document.getElementById('indexing_' + code + '_stop_btn').classList.remove('invisible');
+                document.getElementById('indexing_' + code + '_start').classList.remove('invisible');
+                document.getElementById('indexing_' + code + '_running').classList.remove('invisible');
+                document.getElementById('indexing_' + code + '_end').classList.add('invisible');
+                setTimeout(progress, 5000)
+              } else if(data.currentCount == 0) {
+                document.getElementById('indexing_' + code + '_start_btn').classList.remove('invisible');
+                document.getElementById('indexing_' + code + '_stop_btn').classList.add('invisible');
+              } else {
+                document.getElementById('progressbar_' + code + '_label').innerHTML = data.currentCount + ' / ' + data.totalCount;
+                document.querySelector('#indexing_' + code + '_end > span.output').innerHTML = data.endOutput;
+                document.getElementById('indexing_' + code + '_start_btn').classList.remove('invisible');
+                document.getElementById('indexing_' + code + '_stop_btn').classList.add('invisible');
+                document.getElementById('indexing_' + code + '_start').classList.remove('invisible');
+                document.getElementById('indexing_' + code + '_running').classList.remove('invisible');
+                document.getElementById('indexing_' + code + '_end').classList.remove('invisible');
+              }
+            });
+        }
+        setTimeout(progress, delay_ms);
+      });
+    </script>
+  </div>
+</body>
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<!--/*
+ * This file is part of the DEMel web application.
+ * 
+ * Copyright 2023
+ * DEMel project team, Rostock University, 18051 Rostock, Germany
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */-->
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org"
+  xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+<title th:text="#{demel.scans.title}">Zettel</title>
+<meta th:replace="~{fragments/page :: html_header}" />
+<script type="text/javascript" th:src="@{/javascript/demel.js}"></script>
+</head>
+<body class="ir-body">
+  <nav th:replace="~{fragments/page :: top_navigation}"></nav>
+  <header th:replace="~{fragments/page :: header (navActive='')}"></header>
+  <nav th:replace="~{fragments/page :: navigation (navActive='')}">...</nav>
+  <main class="ir-main container">
+    <div class="row mb-2">
+      <div class="col-3">
+        <h2>
+          <span class="text-dark pe-2 h4 ps-2" style="cursor: pointer; position: relative; top: -2px"
+            data-bs-html="true" data-object-type="scan" data-bs-placement="left"
+            th:data-bs-title="#{demel.scans.info.title}" th:data-bs-content="#{demel.scans.info.content}"
+            data-bs-toggle="popover-help"><i class="fa-regular fa-circle-question"></i></span> <span
+            th:text="#{demel.scans.heading}">Zettel</span>
+        </h2>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-3 demel-search">&nbsp;</div>
+      <div class="col">
+        <div class="row">
+          <div id="scan_cite_button_container" class="col-1 text-end pe-0"></div>
+          <div th:id="${'scan_info_' + scan.id}" class="col-md-8"></div>
+          <div class="col-2" style="position: relative">
+            <div style="position: absolute; bottom: 0; right: 0; left: 0">
+              <a class="btn btn-sm btn-secondary ms-2 mb-2 float-end" th:id="${'btn_show_attestations_'+scan.id}"
+                th:title="#{demel.attestations.scans.button.enlarge}"
+                th:href="${@environment.getProperty('doro.url') + 'api/iiif/image/v2/demel%252F'+ #strings.replace(scan.contentid, '/', '%252F')+'/full/full/' + scan.rotation + '/default.jpg'}"
+                target="_blank"><i class="fa-solid fa-expand"></i></a>
+              <button class="btn btn-sm btn-secondary mb-2 ms-2 float-end demel-btn-rotate" type="button"
+                onclick="rotateScanImg(this)" data-attestation-id="image" th:data-scan-id="${scan.id}"
+                th:title="#{demel.attestations.scans.button.rotate}">
+                <i class="fa-solid fa-arrow-rotate-right"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="row mt-3">
+          <div class="col"></div>
+          <div class="col-10">
+            <div>
+              <img class="demel-image" th:id="${'img_image_'+scan.id}" style="width: 100%"
+                th:src="${@environment.getProperty('doro.url') + 'api/iiif/image/v2/demel%252F'+ #strings.replace(scan.contentid, '/', '%252F')+'/full/full/' + scan.rotation + '/default.jpg'}"
+                th:data-zoom-image="${@environment.getProperty('doro.url') + 'api/iiif/image/v2/demel%252F'+ #strings.replace(scan.contentid, '/', '%252F')+'/full/full/' + scan.rotation + '/default.jpg'}"
+                th:data-rotation="${scan.rotation}" th:data-contentid="${scan.contentid}">
+            </div>
+          </div>
+          <div class="col"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <footer th:replace="~{fragments/page :: footer}"></footer>
+  <script th:replace="~{fragments/page :: script_footer}"></script>
+  <script th:src="@{/javascript/elevatezoom-plus_1.2.5/jquery.ez-plus.min.js}"></script>
+  <script type="text/javascript" th:inline="javascript">
+    documentReady(function() {
+    const cid = /*[[${scan.id}]]*/"";
+
+    let img = document.querySelector("#img_"+cid);
+    initScanEzPlus(img);
+    document.querySelector('#scan_cite_button_container')
+      .innerHTML = buttonCiteWithPopover(cid, 'scan', {label:/*[[#{demel.scans.heading}]]*/"", 
+                                                       purl:/*[[#{demel.popover.cite.citelink}]]*/""});
+    initPopovers();
+
+    fetch(`${document.getElementsByName('demel-baseurl')[0].getAttribute('content')}api/infobox/scan/${cid}`)
+      .then((response) => response.text())
+      .then((html) => {
+        document.querySelector("#scan_info_"+cid).innerHTML=html;
+        initPopovers(document.querySelector("#scan_info_"+cid));
+      });
+    });
+
+    function rotateScanImg(src) {
+      rotateImage(src);
+      let scanId = src.dataset.scanId;
+      let img = document.querySelector("#img_" + scanId);
+      initScanEzPlus(img)
+    }
+
+    function initScanEzPlus(img){
+      $(img).ezPlus({
+             borderColour: "#004A99",
+             borderSize:1,
+             zoomType: 'lens',
+             lensShape: 'square',
+             lensSize: 300,
+             scrollZoom:true,
+             responsive:true
+      });
+    }
+  </script>
+</body>
+</html>

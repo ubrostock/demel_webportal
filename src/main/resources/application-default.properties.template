@@ -1,0 +1,30 @@
+################################################################
+# DEMel template for application.properties in production
+################################################################
+# This file is part of the DEMel web application. 
+#
+# Copyright 2023
+# DEMel project team, Rostock University, 18051 Rostock, Germany
+#
+# Licensed under the Apache License, Version 2.0
+#################################################################
+demel.datasource.jdbc-url=jdbc:mysql://localhost/demel?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Europe/Berlin
+demel.datasource.username=***
+demel.datasource.password=***
+demel.datasource.test-on-borrow=true
+demel.datasource.initialize=false
+
+demel.mail.from=***
+spring.mail.host=***
+spring.mail.port=***
+spring.mail.username=***
+spring.mail.password=***
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+
+
+solr.server.url=http://localhost:8983/solr
+solr.server.collection=demel
+doro.url=https://doro.uni-rostock.de/
+
+server.use-forward-headers=true

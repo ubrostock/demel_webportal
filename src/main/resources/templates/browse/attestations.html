@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<!--/*
+ * This file is part of the DEMel web application.
+ * 
+ * Copyright 2023
+ * DEMel project team, Rostock University, 18051 Rostock, Germany
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */-->
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org"
+  xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+<title th:text="#{demel.attestations.title}">Belegte Formen</title>
+<meta th:replace="~{fragments/page :: html_header}" />
+<meta name="_csrf" th:content="${_csrf.token}" />
+<meta name="_csrf_header" th:content="${_csrf.headerName}" />
+
+<meta sec:authorize="hasRole('ROLE_EDITOR')" name="demel:role" content="ROLE_EDITOR" />
+<meta sec:authorize="hasRole('ROLE_MANAGER')" name="demel:role" content="ROLE_MANAGER" />
+<meta sec:authorize="hasRole('ROLE_MESSAGEEDITOR')" name="demel:role" content="ROLE_MESSAGEEDITOR" />
+<style>
+  ul#select2-filter_atts_id-results li.select2-results__message {
+    display: none !important;
+  }
+</style>
+</head>
+<body class="ir-body">
+  <nav th:replace="~{fragments/page :: top_navigation}"></nav>
+  <header th:replace="~{fragments/page :: header (navActive='nav-main-attestations')}"></header>
+  <nav th:replace="~{fragments/page :: navigation (navActive='nav-main-attestations')}">...</nav>
+  <main class="ir-main container-fluid">
+    <div class="row mb-2">
+      <div class="col-8 col-md-4 col-lg-3 col-xl-2">
+        <a id="btnCleanFilter" class="btn btn-sm btn-link pt-1 float-end" style="cursor: pointer"
+          th:title="#{demel.common.clear_form_all}" th:href="@{/browse/attestations}"> <i class="fa-solid fa-trash-can"></i>
+        </a>
+        <h2>
+          <span class="text-dark pe-1 h4 ps-2" style="cursor: pointer; position: relative; top: -2px" 
+            data-bs-placement="left"
+            th:data-bs-title="#{demel.attestations.info.title}"
+            th:data-bs-content="#{demel.attestations.info.content}" data-bs-toggle="popover-help"><i
+            class="fa-regular fa-circle-question"></i></span> <span th:utext="#{demel.attestations.heading}">Belege</span>
+        </h2>
+      </div>
+      
+      <div class="d-block d-md-none col-4 text-end">
+        <div th:insert="~{fragments/togglebuttons :: togglebutton_filter}"></div>
+      </div>
+      
+    </div>
+    <div class="row">
+      <div class="col-8 col-md-4 col-lg-3 col-xl-2">
+      <div id="facetInfo" class="demel-search collapse">
+        <form id="attestation_form" name="attestation_form" th:action="@{/browse/attestations}" method="GET">
+          <!--/* This button has the role of the first button in our form 
+                 - it will be considered as clicked, when using <ENTER> on other form elements */-->
+          <button style="overflow: visible; height: 0; width: 0; margin: 0; border: 0; padding: 0; display: block;"
+            type="submit" value="default action"></button>
+          <input type="hidden" name="filter" th:value="'published'"
+                 th:unless="${showDeleted or #authorization.expression('isAuthenticated()')}">
+
+          <div th:insert="~{fragments/togglebuttons :: togglebutton_search_exact (formId='attestation_form')}"></div>
+          <div>
+            <!-- /* Achtung: DropDown per CSS ausgeblendet, s.o.*/-->
+            <div th:insert="~{fragments/searchbox :: searchbox (name='att', formId='attestation_form')}"></div>
+          </div>
+
+          <div class="card demel-searchbox border border-secondary mt-4">
+            <div th:replace="~{fragments/form :: filter_card_header (name='type', form='attestation_form')}"></div>
+            <div class="card-body px-2">
+              <th:block th:each="opt : ${T(de.uni.rostock.demel.data.model.dictionary.Attestation.AttestationType).values()}" 
+                        th:unless="${opt.value=='undocumented'}">
+                <div th:replace="~{fragments/form :: checkbox4facet (name='type', value='__${opt.value}__', form='attestation_form',
+                                      symbol='__${opt.symbol}__',
+                                      symbol_css='top: -0.2em;height:1.2em', 
+                                      badge_css='top:.2em; width:4em;height:1.2em')}"></div>
+              </th:block>
+            </div>
+          </div>
+
+          <div class="mt-3">
+            <div th:insert="~{fragments/searchbox :: searchbox (name='used_lemma', formId='attestation_form')}"></div>
+          </div>
+
+          <div class="mt-3">
+            <div th:insert="~{fragments/searchbox :: searchbox (name='used_source', formId='attestation_form')}"></div>
+          </div>
+
+          <div class="card demel-seachbox border border-secondary mt-3">
+            <div th:replace="~{fragments/form :: filter_card_header (name='dating', form='attestation_form')}"></div>
+            <div class="card-body px-2">
+              <table class="w-100 mb-2">
+                <tr>
+                  <td><input type="text" style="width: 100%" name="dating_from"
+                    th:placeholder="#{demel.attestation_form.filter.dating.placeholder.from}" th:value="${dating_from}"></td>
+                  <td>&nbsp;-&nbsp;</td>
+                  <td><input type="text" style="width: 100%" name="dating_to"
+                    th:placeholder="#{demel.attestation_form.filter.dating.placeholder.to}" th:value="${dating_to}"></td>
+                  <td><button class="btn btn-sm btn-primary ms-3" type="submit">
+                      <i class="fa-solid fa-magnifying-glass"></i>
+                    </button>
+                </tr>
+              </table>
+              <div th:replace="~{fragments/form :: checkbox4facet (name='filter', value='undated', form='attestation_form',)}"></div>
+            </div>
+          </div>
+
+          <div class="card demel-searchbox border border-secondary mt-3">
+            <div th:replace="~{fragments/form :: filter_card_header (name='mwexpr', form='attestation_form')}"></div>
+            <div class="card-body px-2">
+              <th:block th:each="opt : ${T(de.uni.rostock.demel.data.model.TristateBoolean).values()}">
+                <div th:replace="~{fragments/form :: checkbox4facet (name='mwexpr', value='__${opt.value}__', form='attestation_form',
+                 badge_css='width:4em;top:.3em')}"></div>
+              </th:block>
+            </div>
+            <div class="card-footer bg-light ps-1 pe-2">
+               <div class="input-group input-group-sm">
+                 <input id="input" type="text" name="mwexpr_term" class="form-control form-control-sm" th:value="${mwexpr_term}" />
+                 <button class="btn btn-primary demel-searchbox-submitbutton" type="submit" id="submit_mwexpr_term">
+                   <i class="fa-solid fa-magnifying-glass"></i>
+                 </button>
+               </div>
+            </div>
+          </div>
+
+          <div th:replace="~{fragments/form ::message_filter('attestation_form')}"></div>
+        </form>
+      </div>
+      </div>
+
+      <div class="col-12 col-md-8 col-lg-9 col-xl-10">
+        <div id="demel-no-data" class="card card-header border border-primary mt-3 h3 d-none"
+          th:text="#{demel.attestations.searchresult_empty}">Keine belegten Formen gefunden.</div>
+        <div id="demel-show-data" style="position:relative">
+          <table id="datatable_attestations" class="display table table-sm table-borderless table-striped w-100">
+            <thead class="bg-primary text-white">
+              <tr>
+                <th>&nbsp;</th>
+                <th th:utext="#{demel.attestations.table.type}">Typ</th>
+                <th th:utext="#{demel.attestations.table.form}">Belegte&nbsp;Form / Verweis</th>
+                <th th:utext="#{demel.attestations.table.lemma}">Lemma</th>
+                <th th:utext="#{demel.attestations.table.sigle}">Sigle</th>
+                <th th:utext="#{demel.attestations.table.dating}">Datierung</th>
+                <th th:utext="#{demel.attestations.table.mwexpr}">Kollokation</th>
+                <th th:utext="#{demel.attestations.table.scan}">Zettel</th>
+                <th th:utext="#{demel.attestations.table.messages}">Kommentare</th>
+              </tr>
+            </thead>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+  <footer th:replace="~{fragments/page :: footer}"></footer>
+  <script th:replace="~{fragments/page :: script_footer}"></script>
+  
+  <!-- /* Elevate Zoom (Image viewer) */-->
+  <script th:src="@{/javascript/elevatezoom-plus_1.2.5/jquery.ez-plus.min.js}"></script>
+
+  <script type="text/javascript" th:inline="javascript">
+    documentReady(function() {
+      let baseURL = /*[[@{/}]]*/"";
+      initPopovers();
+
+      let params= retrieveFormParams("#attestation_form");
+
+      let partOfSpeech = new Map();
+      partOfSpeech.set('adj', /*[[#{demel.vocabulary.lemma__part_of_speech.adj.abbr}]]*/"");
+      partOfSpeech.set('adv', /*[[#{demel.vocabulary.lemma__part_of_speech.adv.abbr}]]*/"");
+      partOfSpeech.set('art', /*[[#{demel.vocabulary.lemma__part_of_speech.art.abbr}]]*/"");
+      partOfSpeech.set('gerund', /*[[#{demel.vocabulary.lemma__part_of_speech.gerund.abbr}]]*/"");
+      partOfSpeech.set('interj', /*[[#{demel.vocabulary.lemma__part_of_speech.interj.abbr}]]*/"");
+      partOfSpeech.set('conj', /*[[#{demel.vocabulary.lemma__part_of_speech.conj.abbr}]]*/"");
+      partOfSpeech.set('name_topo', /*[[#{demel.vocabulary.lemma__part_of_speech.name_topo.abbr}]]*/"");
+      partOfSpeech.set('name_anthropo', /*[[#{demel.vocabulary.lemma__part_of_speech.name_anthropo.abbr}]]*/"");
+      partOfSpeech.set('name_other', /*[[#{demel.vocabulary.lemma__part_of_speech.name_other.abbr}]]*/"");
+      partOfSpeech.set('part', /*[[#{demel.vocabulary.lemma__part_of_speech.part.abbr}]]*/"");
+      partOfSpeech.set('prep', /*[[#{demel.vocabulary.lemma__part_of_speech.prep.abbr}]]*/"");
+      partOfSpeech.set('pron', /*[[#{demel.vocabulary.lemma__part_of_speech.pron.abbr}]]*/"");
+      partOfSpeech.set('subst', /*[[#{demel.vocabulary.lemma__part_of_speech.subst.abbr}]]*/"");
+      partOfSpeech.set('subst_m', /*[[#{demel.vocabulary.lemma__part_of_speech.subst_m.abbr}]]*/"");
+      partOfSpeech.set('subst_m_pl', /*[[#{demel.vocabulary.lemma__part_of_speech.subst_m_pl.abbr}]]*/"");
+      partOfSpeech.set('subst_f', /*[[#{demel.vocabulary.lemma__part_of_speech.subst_f.abbr}]]*/"");
+      partOfSpeech.set('subst_f_pl', /*[[#{demel.vocabulary.lemma__part_of_speech.subst_f_pl.abbr}]]*/"");
+      partOfSpeech.set('verb', /*[[#{demel.vocabulary.lemma__part_of_speech.verb.abbr}]]*/"");
+      partOfSpeech.set('verb_prnl', /*[[#{demel.vocabulary.lemma__part_of_speech.verb_prnl.abbr}]]*/"");
+      partOfSpeech.set('undocumented', /*[[#{demel.vocabulary.lemma__part_of_speech.undocumented.abbr}]]*/"");
+
+      let table = new DataTable('#datatable_attestations', {
+        pagingType: "input", // datatable plugin for input field "goto page"
+        paging: true,
+        processing: true,
+        serverSide: true,
+        lengthChange: false,
+        searching: false, // table search off
+        iDisplayLength: 50,
+        scrollToTop: true,  //use scrollToTop Datatables plugin
+        rowId:  function(data) { return 'tr_' + data.id; },
+        language: {
+          url: document.getElementsByName('demel-baseurl')[0].getAttribute('content') + "javascript/datatables/" + (/*[[#{datatables.lang}]]*/"")
+        },
+        ajax: document.getElementsByName('demel-baseurl')[0].getAttribute('content') + "api/datable/attestations?" + params,
+        // https://stackoverflow.com/a/39409456
+        dom: `<'row demel-with-download'<'col d-xl-flex justify-content-between'<'mt-3'i><'mt-3'p>>>
+              <'row'<'col-12 mt-3'tr>>
+              <'row demel-with-download'<'col d-xl-flex justify-content-between'<'mt-3'i><'mt-3'p>>>`,
+        //turn of sorting with "orderable":false
+        createdRow: function( row, data, dataIndex ) {
+          if(data.status === "deleted"){
+            row.classList.add("demel-deleted-object");
+          }
+        },
+        columnDefs: [
+          { "name": "id",            "targets": 0 },
+          { "name": "type",          "targets": 1 },
+          { "name": "form",          "targets": 2 },
+          { "name": "lemma",         "targets": 3 },
+          { "name": "source",        "targets": 4 },
+          { "name": "dating",        "targets": 5 },
+          { "name": "multiwordexpr", "targets": 6 },
+          { "name": "scans",         "targets": 7 , "width": "25%" },
+          { "name": "messages",      "targets": 8 }
+        ],
+
+        order: [ [ 0, "asc" ] ],
+        columns: [
+          //0 ... id  
+          { data: function (data, type,row, meta) {
+            let btnEdit = "";
+            let spanId = "";
+            let pInfo = table.page.info();
+            if(Array.from(document.querySelectorAll("meta[name='demel:role']")).find( m => m.content === "ROLE_EDITOR")) {
+              btnEdit = `<a href="/edit/attestations/${data.id}?query_params=${encodeURIComponent(params)}&return_url=${encodeURIComponent(window.location.href)}"
+                            class="btn btn-sm btn-info"> &#9998;</a>`;
+              spanId = `<br /><small class="ps-2"> ${data.id} </small><br />`
+            }
+            let btnCite = buttonCiteWithPopover(data.id, 'attestation', 
+                                               {label:/*[[#{demel.attestation_form.javascript.attestation}]]*/"", 
+                                                purl:/*[[#{demel.popover.cite.citelink}]]*/""});
+            return `<nobr>${btnCite}${btnEdit}</nobr>${spanId}`;
+          }},
+
+          //1 ... type 
+          { data: function (data, type,row, meta) {
+        	  let iconDeleted = (data.status === "deleted") ? "<span class='fs-2 text-danger pe-3' title='"+ (/*[[#{demel.attestation_form.table.deleted.tooltip}]]*/"") + "'><i class='fa-solid fa-ban'></i></span>" : "";
+        	  let spanSymbol = `<span style="font-size: 1.5em;" title="[(#{demel.attestation_form.table.type.tooltip})]"> 
+                      ${data.typeSymbol}</span>`;
+        	  return `<nobr>${iconDeleted}${spanSymbol}</nobr>`;
+          }},
+
+          //2 ... form
+          { data: function (data, type,row, meta) { 
+            if(data.type == "lemmalink" && data.lemmalinkId != null) {
+              return `<em>[s.v. <a href="lemmas?lemma_object=${data.lemmalinkId}">${data.lemmalinkName}</a>]</em>`;
+            }
+            if(data.type == "secondary") {
+              return `<em class="text-muted">[(#{demel.attestations.table.mwexpr.null})]</em>`;
+            }
+            if(data.form == "") {
+                return `<em>[(#{demel.attestation_form.javascript.ohne})]</em>`;
+              }
+
+            return `<strong>${encodeHTMLEntities(data.form)}</strong>`;
+          }},
+
+          //3 ... lemma
+          { data: function (data, type,row, meta) {
+            let pos = data.lemmaPartOfSpeechs;
+            if(pos == null) {
+              pos = [];
+            }
+            pos = pos.filter(function(e) { return e !== 'undocumented' });
+            for (i = 0; i < pos.length; i++) {
+              pos[i] = partOfSpeech.get(pos[i]);
+            }
+            let result = "";
+            if(data.lemmaId!=null) {
+              result = result + `<span class="h4" style="cursor:pointer" data-object-type="lemma" data-bs-toggle="popover-info" 
+                                     data-object-id="${data.lemmaId}"><i class="fa-regular fa-eye"></i></span>`;
+            }
+            let posFiltered = pos.filter(function(e) { return e !== undefined }).join(' / ');
+            result = result + ` <span>${data.lemmaName}</span> <small class="text-muted">${posFiltered}</small>`;
+            return result; 
+          }},
+
+          //4 ... source
+          { data: function (data, type,row, meta) {
+            if(data.sourceId != null){
+              return `<span class="h4" style="cursor:pointer" data-bs-html="true" data-bs-content=" " data-bs-toggle="popover-info" 
+                            data-object-type="source" data-object-id="${data.sourceId}"><i class="fa-regular fa-eye"></i></span> <span>${data.sourceName}</span>`; 
+            } else {
+              return ``;
+            }
+          }},
+
+          //5 ...dating
+          { data: function (data, type,row, meta) {
+            let out = "";
+            if(data.datingOrigin == "undocumented") {
+               out += `<em class="text-muted">[(#{demel.attestations.table.dating.none})]</em>`;
+            } else if(data.datingOrigin == "scan") {
+              if(data.datingDisplay!=null) {
+                if(data.datingDisplay == "") {
+                  out += `<em class="text-muted">[(#{demel.attestations.table.dating.none})]</em>`;
+                } else {
+                  out += `${data.datingDisplay}`;
+                }
+              } else {
+                out += `<em></em>`;
+              }
+            } else if(data.datingOrigin == "primary_source"){
+              if(data.sourceDatingDisplay!=null) {
+                if(data.sourceDatingDisplay == "") {
+                  out += `<em class="text-muted">[(#{demel.attestations.table.dating.none})]</em>`;
+                } else {
+                  out += `${data.sourceDatingDisplay}`;
+                }
+              } else {
+                out += `<em>[(#{demel.attestations.table.dating.none})]</em>`;
+              }
+            } else if(data.datingOrigin == "secondary_source"){
+              if(data.sourceDatingDisplay!=null) {
+                if(data.sourceDatingDisplay != "") {
+                  out += `<span class="text-muted">${data.sourceDatingDisplay}</span>`;
+                } else {
+                  out += `<em class="text-muted">[(#{demel.attestations.table.dating.none})]</em>`;
+                }
+                out += `&nbsp;<sup class="text-muted" title="[(#{demel.attestations.table.dating.origin.secondary_source})]">
+                                <big>[(#{demel.vocabulary.attestation__dating_origin.secondary_source.abbr})]</big>
+                              </sup>`;
+              } else {
+                out += `<span class="text-muted">[(#{demel.attestations.table.dating.null})]</span>`;
+              }
+            }
+            return out;
+          }},
+
+          // 6... multiwordexpr
+          { data: function (data, type,row, meta) {
+            let out = ``;
+            if(data.isMultiwordexpr != null) {
+              if(data.isMultiwordexpr == 'false') {
+                out += `<em>[(#{demel.attestations.table.mwexpr.false})]</em>`;
+              } else if(data.isMultiwordexpr == 'null') {
+                out += `<em class="text-muted">[(#{demel.attestations.table.mwexpr.null})]</em>`;
+              }
+            }
+            if(data.multiwordexpr!=null){
+              out += `${data.multiwordexpr}`;
+            }
+            return out;
+          }},
+
+          // 7 ... scans
+          { data: function (data, type,row, meta) { 
+            if(data.countScans > 0) {
+              return `
+                <button type="button" class="demel-btn-show-detail btn btn-sm btn-outline-primary"
+                        id="button_scans_${data.id}" title="[(#{demel.attestations.scans.toggle})]"
+                        data-scan-ids="${data.scanIDs.join('|')}"
+                        onclick="toggleScans(&quot;${data.id}&quot;)" value="${data.id}">
+                        ${data.countScans} <i class="fa-regular fa-images"></i></button>`
+            } else {
+              return `<span class="ps-3">0</span>`;
+            }
+          }},
+
+          // 8 ... messages
+          { data: function (data, type,row, meta) {
+            let i18nTitle = /*[[#{demel.parts.container_messages.button.toggle_messages}]]*/"";  
+            return createMessagesAreaToggleButton(data.id, data.doctype, i18nTitle, data.countMessagesPublished, data.countMessagesInreview, data.countMessages)
+            + `<div id="attestation_info_${data.id}" class="collapse attestation-info" data-attestation-id="${data.id}">...</div>`;
+          }}
+        ]
+      });
+
+      table.on('page.dt', function () {
+    	// use datatable plugin scrollToTop instead  
+        //document.querySelector("main").scrollIntoView(true);
+      });
+
+      table.on('preDraw', function () {
+        hidePopovers();
+        closeAllDetails();
+      });
+
+      table.on('draw', function () {
+        createDownloadMenu();
+        initObjectInfo('attestation');
+        initPopovers();
+        let datatableLang = '[(#{datatables.lang})]';
+
+        if (table.data().count()){
+          document.getElementById('demel-no-data').classList.add('d-none');
+          document.getElementById('demel-show-data').classList.remove('d-none');
+          let i18n_show_all = {
+                  'btn_title_show_all':  /*[[#{demel.attestations.scans.button.show_all}]]*/"",
+                  'btn_title_close_all': /*[[#{demel.attestations.scans.button.close_all}]]*/"" };
+          let divTablePagination = document.getElementById('datatable_attestations_paginate');
+          let pos = divTablePagination.style.display==="none" ? "afterend" : "beforeend"; 
+          divTablePagination.insertAdjacentHTML(pos, createButtonsShowAllCloseAll(divTablePagination.parentElement, i18n_show_all, 'fa-regular fa-images', 'fa-solid fa-xmark'));
+        } else {
+            document.getElementById('demel-no-data').classList.remove('d-none');
+            document.getElementById('demel-show-data').classList.add('d-none');
+        }
+        //show messages for deleted objects (simulated click on message button)
+        //disabled: infoboxes for other objects to big
+        //table.context[0].nTable.querySelectorAll('tr').forEach((tr) => {
+        //  if(tr.classList.contains('demel-deleted-object') && tr.id.startsWith('tr_')){
+        //    document.querySelector('#button_messages_'+tr.id.substring(3)).click();
+        //  }
+        //});
+      });
+
+      // processed on reload - additional data can be set on server response
+      table.on( 'xhr', function () {
+        let json = table.ajax.json();
+        if(json){
+          for (var f of json.facetType) {
+            document.getElementById('facet-type-'+f.value).innerText = f.valueCount;
+          }
+          for (var f of json.facetMultiwordexpr) {
+            document.getElementById('facet-mwexpr-'+f.value).innerText = f.valueCount;
+          }
+        }
+      });
+
+      table.on('init.dt', function () {
+        let urlParams = new URLSearchParams(window.location.search);
+        if(urlParams.has('start') && Number.isInteger(parseInt(urlParams.get('start')))) {
+          let startPage = Math.floor(parseInt(urlParams.get('start')) / table.page.info().length);
+          table.page(startPage);
+          setTimeout(function(){table.ajax.reload(null, false);}, 500);
+        }
+      });
+    }); //END document.ready()
+
+    function toggleScans(id) {
+      //only toggle scans, if the row with the attestation is still displayed	
+      if(document.getElementById('tr_'+id) != null) {
+        hidePopovers();
+        createExtendedArea(id);
+
+        let button = document.getElementById('button_scans_'+id);
+        let tdImg = document.getElementById('container_scans_'+id);
+
+        if(button.classList.contains("active")) {
+          button.classList.remove("active");
+          button.removeAttribute('aria-expanded');
+          tdImg.querySelectorAll('a').forEach(x => x.remove());
+          tdImg.querySelectorAll('.demel-btn-rotate').forEach(x => x.remove());
+          tdImg.querySelectorAll('.demel-btn-close-scans').forEach(x => x.remove());
+          tdImg.querySelectorAll('.demel-btn-cite').forEach(x => x.remove());
+
+          tdImg.querySelectorAll('hr').forEach(x => x.remove());
+          tdImg.querySelectorAll('img').forEach(x => {
+          x.src='';
+            let ez = $(x).data('ezPlus');
+            if(ez != null) {
+              ez.closeAll();
+            }
+            x.remove();
+          });
+        } else {
+          button.classList.add("active");
+          button.setAttribute('aria-expanded', true);
+          let baseURL = '[(@{/})]';
+          let attestationID = button.getAttribute('value');
+          let scanIDs = button.getAttribute('data-scan-ids').split('|');
+          let htmlContainer = tdImg;
+
+          let i18n_img = {
+            'demel_attestations_scans_button_close':           /*[[#{demel.attestations.scans.button.close}]]*/"",
+            'demel_attestations_scans_button_other_attestations': /*[[#{demel.attestations.scans.button.other_attestations}]]*/"",
+            'demel_attestations_scans_button_enlarge':         /*[[#{demel.attestations.scans.button.enlarge}]]*/"",
+            'demel_attestations_scans_button_rotate':          /*[[#{demel.attestations.scans.button.rotate}]]*/"",
+            'demel_attestations_table_scan':  /*[[#{demel.attestations.table.scan}]]*/"", 
+            'demel_javascript_json_data':   /*[[#{demel.popover.cite.json_data}]]*/"",
+            'demel_javascript_citelink':    /*[[#{demel.popover.cite.citelink}]]*/""
+          };
+
+          displayScans(htmlContainer, i18n_img, baseURL, attestationID, scanIDs);
+        }
+      }
+    }
+
+   function createExtendedArea(id) {
+      //called from demel_messages.js
+      if(document.getElementById('tr2_'+id) == null) {
+        let newtr = `<tr id="tr2_${id}" class="${document.getElementById('tr_'+id).classList} collapse">
+                       <td class="p-0 py-0"></td>
+                       <td class="pe-5 py-0" colspan="6" id="container_messages_${id}"></td>
+                       <td class="pe-3 py-0" colspan="2" id="container_scans_${id}"></td>
+                     </tr>`;
+        document.getElementById('tr_' + id).insertAdjacentHTML('afterend', newtr);
+      }
+      bootstrap.Collapse.getOrCreateInstance("#tr2_"+id).show();
+    }
+
+    function createDownloadMenu() {
+      let i18nDownloadPopoverTitle = /*[[#{demel.attestation_form.download.info.title}]]*/"";
+      let i18nDownloadPopoverContent = /*[[#{demel.attestation_form.download.info.content}]]*/"";
+      document.querySelectorAll('.demel-download-menu').forEach(x => x.remove());
+      let html = `
+        <div class="demel-download-menu d-inline-block float-start pe-3">
+          <div class="dropdown d-inline-block">
+            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownDownload" 
+                    style="height:2.2em;"
+                    title="[(#{demel.common.download.button.title})]" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="fa-solid fa-download"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownDownload">
+              <li><a class="dropdown-item" href="#" onclick="demelDownload('csv');">[(#{demel.common.download.button.dropdown.csv})]</a></li>
+              <li><a class="dropdown-item" href="#" onclick="demelDownload('json');">[(#{demel.common.download.button.dropdown.json})]</a></li>
+              <li><a class="dropdown-item" href="#" onclick="demelDownload('pdf');">[(#{demel.common.download.button.dropdown.pdf})]</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="#" onclick="demelDownload('url');">[(#{demel.common.download.button.dropdown.url})]</a></li>
+            </li>
+          </div>
+          <div class="demel-popover-help-download d-inline-block text-dark" style="cursor:pointer;transform: translate(0px, -0.33rem);" data-bs-placement="left" 
+               data-bs-title="${i18nDownloadPopoverTitle}" 
+               data-bs-content="${i18nDownloadPopoverContent}" data-bs-toggle="popover-help"><i class="fa-regular fa-circle-question"></i>
+          </div>
+        </div>
+      `;
+      document.querySelectorAll('.demel-with-download .dataTables_info').forEach(x => x.insertAdjacentHTML('afterbegin', html));
+      document.querySelectorAll('.demel-popover-help-download').forEach((x) => {
+  	    bootstrap.Popover.getOrCreateInstance(x, createPopoverHelpOptions());
+      });
+    }
+
+    function demelDownload(format) {
+    	if(format ==='url'){
+      	  let url=`${window.location.origin}/browse/attestations?${retrieveFormParams("#attestation_form")}`;
+      	  showBookmarkURL(url);	
+        } else{
+          //get first (and only) datatable api object on page, ignore visability state
+          let table = DataTable.tables( { api: true } ).eq(0);
+          let pageInfo = table.page.info();
+
+          //Sort-URL-Parameter: &order[0][column]=2&order[0][dir]=desc
+          let order = table.order();
+          let url = "../api/data/" + format + "/attestations?" + retrieveFormParams("#attestation_form");
+          url += "&start=" + pageInfo.start
+          let idx = order[0][0];
+          url += "&order[0][column]="+idx
+             +"&order[0][dir]="+order[0][1]
+             +"&columns["+idx+"][name]="+ table.ajax.params().columns[idx].name;
+          window.open(url, '_download');
+        }
+    }
+  </script>
+  <script th:replace="~{fragments/form :: bookmark_url_javascript}"></script>
+</body>
+</html>

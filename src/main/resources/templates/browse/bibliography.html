@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<!--/*
+ * This file is part of the DEMel web application.
+ * 
+ * Copyright 2023
+ * DEMel project team, Rostock University, 18051 Rostock, Germany
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */-->
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org"
+  xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+<title th:text="#{demel.biblio.title}">DEMel Bibliographie</title>
+<meta th:replace="~{fragments/page :: html_header}" />
+<meta sec:authorize="hasRole('ROLE_MESSAGEEDITOR')" name="demel:role" content="ROLE_MESSAGEEDITOR" />
+<style type="text/css">
+  #select2-filter_editions_id-results {
+    display: none !important;
+  }
+  .paginate_input {
+    width:2.5em !important;
+  }
+</style>
+</head>
+<body class="ir-body">
+  <nav th:replace="~{fragments/page :: top_navigation}"></nav>
+  <header th:replace="~{fragments/page :: header (navActive='nav-main-bibliography')}"></header>
+  <nav th:replace="~{fragments/page :: navigation (navActive='nav-main-bibliography')}">...</nav>
+  <main class="ir-main container">
+    <div class="row mb-2">
+      <div class="col-8 col-md-5 col-lg-4 pb-3">
+        <a id="btnCleanFilter" class="btn btn-sm btn-link pt-1 float-end" style="cursor: pointer"
+          th:title="#{demel.common.clear_form_all}" th:href="@{/browse/bibliography}"> <i class="fa-solid fa-trash-can"></i>
+        </a>
+        <h2>
+          <span class="text-dark pe-1 h4 ps-2" style="cursor: pointer; position: relative; top: -2px" data-bs-html="true"
+            data-object-type="source" data-bs-placement="left"
+            th:data-bs-title="#{demel.biblio.info.title}"
+            th:data-bs-content="#{demel.biblio.info.content}" data-bs-toggle="popover-help"><i
+            class="fa-regular fa-circle-question"></i></span> <span th:text="#{demel.biblio.heading}">DEMel Bibliographie</span>
+        </h2>
+      </div>
+
+      <div class="d-block d-md-none col-4 text-end">
+        <div th:insert="~{fragments/togglebuttons :: togglebutton_filter}"></div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-8 col-md-5 col-lg-4">
+      <div id="facetInfo" class="demel-search collapse">
+        <form id="bibliography_form" name="bibliography_form" th:action="@{/browse/bibliography}" method="GET">
+          <!--/* This button has the role of the first button in our form 
+                 - it will be considered as clicked, when using <ENTER> on other form elements */-->
+          <button style="overflow: visible; height: 0; width: 0; margin: 0; border: 0; padding: 0; display: block;"
+            type="submit" value="default action"></button>
+          <input type="hidden" name="filter" th:value="'published'"
+                 th:unless="${showDeleted or #authorization.expression('isAuthenticated()')}">
+          <div>
+            <div th:insert="~{fragments/searchbox :: searchbox (name='source', formId='bibliography_form')}"></div>
+          </div>
+          <div class="mt-3">
+            <div th:insert="~{fragments/searchbox :: searchbox (name='edition', formId='bibliography_form')}"></div>
+          </div>
+          <div class="card demel-searchbox border border-secondary mt-4">
+            <div th:replace="~{fragments/form :: filter_card_header (name='dating', form='bibliography_form')}"></div>
+            <div class="card-body px-2">
+              <table class="w-100 mb-2">
+                <tr>
+                  <td><input id="search_sigle_dating_from" class="form-control" type="text" name="dating_from"
+                    th:placeholder="#{demel.bibliography_form.filter.dating.placeholder.from}" th:value="${dating_from}" /></td>
+                  <td>&nbsp;-&nbsp;</td>
+                  <td><input id="search_sigle_dating_to" class="form-control" type="text" name="dating_to"
+                    th:placeholder="#{demel.bibliography_form.filter.dating.placeholder.to}" th:value="${dating_to}" /></td>
+                  <td><button class="btn btn-sm btn-primary ms-3" type="submit">
+                      <i class="fa-solid fa-magnifying-glass"></i>
+                    </button>
+                  </td>
+                </tr>
+              </table>
+              <div th:replace="~{fragments/form :: checkbox4facet (name='filter', value='undated', form='bibliography_form')}"></div>
+            </div>
+          </div>
+          <div class="card demel-searchbox border border-secondary mt-3">
+            <div th:replace="~{fragments/form :: filter_card_header (name='type', form='bibliography_form')}"></div>
+            <div class="card-body px-2">
+              <th:block th:each="opt : ${T(de.uni.rostock.demel.data.model.dictionary.Source.SourceType).values()}">
+                <div th:replace="~{fragments/form :: checkbox4facet (name='type', value='__${opt.value}__', form='bibliography_form',
+                                                                     symbol='__${opt.symbol}__',
+                                                                     symbol_css='top: -0.2em; height:1.2em;',
+                                                                     badge_css='top:.2em; width:4em;height:1.2em')}"></div>
+              </th:block>
+            </div>
+          </div>
+          
+          <div class="mt-3">
+            <div th:insert="~{fragments/searchbox :: searchbox (name='person', formId='bibliography_form')}"></div>
+          </div>
+          
+          <div class="card demel-searchbox border border-secondary mt-3">
+            <div th:replace="~{fragments/form :: filter_card_header (name='texttype_language', form='bibliography_form')}"></div>
+            <div class="card-body px-2">
+              <div class="float-start w-50 pe-4">
+                <th:block th:each="opt : ${T(de.uni.rostock.demel.data.model.dictionary.Source.Texttype).values()}">
+                  <div th:replace="~{fragments/form :: checkbox4facet (name='texttype', value='__${opt.value}__', form='bibliography_form',
+                                                                       i18nPrefix='demel.vocabulary.source__texttype')}"></div>
+                </th:block>
+              </div>
+              <div class="float-start w-50">
+                <th:block th:each="opt : ${T(de.uni.rostock.demel.data.model.dictionary.Source.Language).values()}">
+                  <div th:replace="~{fragments/form :: checkbox4facet (name='languages', value='__${opt.value}__', form='bibliography_form',
+                                                                       i18nPrefix='demel.vocabulary.source__language')}"></div>
+                </th:block>
+              </div>
+            </div>
+          </div>
+          <div class="card demel-searchbox border border-secondary mt-3">
+            <div th:replace="~{fragments/form :: filter_card_header (name='genre_subgenre', form='bibliography_form')}"></div>
+            <div class="card-body px-2">
+              <div class="float-start w-50 pe-4">
+                <th:block th:each="opt : ${T(de.uni.rostock.demel.data.model.dictionary.Source.Genre).values()}">
+                  <div th:replace="~{fragments/form :: checkbox4facet (name='genre', value='__${opt.value}__', form='bibliography_form',
+                                                                       i18nPrefix='demel.vocabulary.source__genre')}"></div>
+                </th:block>
+              </div>
+              <div class="float-start w-50">
+                <th:block th:each="opt : ${T(de.uni.rostock.demel.data.model.dictionary.Source.Subgenre).values()}">
+                  <div th:replace="~{fragments/form :: checkbox4facet (name='subgenre', value='__${opt.value}__', form='bibliography_form',
+                                                                       i18nPrefix='demel.vocabulary.source__subgenre')}"></div>
+                </th:block>
+              </div>
+            </div>
+          </div>
+
+          <div class="card demel-searchbox border border-secondary mt-3">
+            <div class="card-body px-2">
+              <div th:replace="~{fragments/form :: checkbox4facet (name='filter', value='unused', form='bibliography_form')}"></div>
+            </div>
+          </div>
+          
+          <div th:replace="~{fragments/form ::message_filter('bibliography_form')}"></div>
+        </form>
+      </div>
+      </div>
+
+      <div class="col-12 col-md-7 col-lg-8">
+        <div id="demel-no-data" class="card card-header border border-primary mt-3 h3 d-none"
+          th:text="#{demel.bibliography.searchresult_empty}">Kein Bibliographie-Einträge gefunden.
+        </div>
+        <div id="demel-show-data" style="position:relative">
+          <table id="datatable_bibliography" class="display table table-sm table-borderless table-striped w-100">
+            <thead class="bg-primary text-white invisible">
+              <tr style="font-size: 1px;">
+                <th>&nbsp;</th>
+                <th>&nbsp;</th>
+                <th>&nbsp;</th>
+                <th>&nbsp;</th>
+                <th>&nbsp;</th>
+              </tr>
+            </thead>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+  <footer th:replace="~{fragments/page :: footer}"></footer>
+  <script th:replace="~{fragments/page :: script_footer}"></script>
+  <script type="text/javascript" th:inline="javascript">
+    documentReady(function() {
+      let baseURL = '[(@{/})]';
+
+      initPopovers();
+      let params= retrieveFormParams("#bibliography_form");
+
+      let table = new DataTable('#datatable_bibliography', {
+        pagingType: "input", // datatable plugin for input field "goto page"
+        processing: true,
+        serverSide: true,
+        lengthChange: false,
+        searching: false, // table search off
+        iDisplayLength: 50,
+        scrollToTop: true,  //use scrollToTop Datatables plugin
+        rowId:  function(data) { return 'tr_' + data.id; },
+        language: {
+          url: document.getElementsByName('demel-baseurl')[0].getAttribute('content') + "javascript/datatables/"  + /*[[#{datatables.lang}]]*/""
+        },
+        ajax: document.getElementsByName('demel-baseurl')[0].getAttribute('content') + "api/datatable/bibliography?" + params,
+        dom: `<'row demel-with-download'<'col d-xl-flex justify-content-between'<'mt-3'i><'mt-3'p>>>
+              <'row'<'col-sm-12 mt-3'tr>>
+              <'row demel-with-download'<'col d-xl-flex justify-content-between'<'mt-3'i><'mt-3'p>>>`,
+
+        createdRow: function( row, data, dataIndex ) {
+          if(data.status === "deleted"){
+             row.classList.add("demel-deleted-object");
+          }
+        },
+        //necessary to remove order buttons from column 0 
+        //https://datatables.net/forums/discussion/21709/orderable-false-on-target-0-first-col-not-working-until-another-column-is-sorted       
+        columnDefs: [
+          { "name": "id",           "targets": 0 },
+          { "name": "type",         "targets": 1 },
+          { "name": "bibliography", "targets": 2, "className": "demel-td-biblio position-relative" },
+          { "name": "toggle",       "targets": 3, "className": "align-bottom py-2" },
+          { "name": "messages",     "targets": 4 }
+        ],
+        order: [ [ 0, "asc" ] ],
+        columns: [
+          { data: function (data, type,row, meta) {
+              return buttonCiteWithPopover(data.id, 'source', {label:/*[[#{demel.bibliography_form.javascript.bibliografieeintrag}]]*/"",
+                                                     purl:/*[[#{demel.popover.cite.citelink}]]*/""});
+            }
+          },
+          { data: function (data, type,row, meta) {
+        	  let iconDeleted = (data.status === "deleted") ? "<span class='fs-2 text-danger pe-3' title='"+ (/*[[#{demel.bibliography_form.table.deleted.tooltip}]]*/"") + "'><i class='fa-solid fa-ban'></i></span>" : "";
+        	  let i18nTooltip = /*[[#{demel.bibliography_form.table.type.tooltip}]]*/"";
+              let spanSymbol = `<span id="${data.id}" style="margin-right: 10px;">
+                           <span class="demel-search-filter-symbol text-body" title="${i18nTooltip}">${data.typeSymbol}</span> 
+                         </span>`;
+              return `<nobr>${iconDeleted}${spanSymbol}</nobr>`;
+            }
+          },
+          { data: function (data, type,row, meta) {
+            let out = "";
+            let messageAnzeigen = /*[[#{demel.bibliography_form.table.show_attestations.tooltip}]]*/"";
+            if(data.type!='journal'){
+              if(data.countAttestations == 0) {
+                let messageNichtVerknuepft = /*[[#{demel.bibliography_form.javascript.nicht_verknuepft}]]*/"";
+                out += `<em class="float-end mt-2 me-2 pe-1 position-absolute" style="right:0" disabled="disabled">${messageNichtVerknuepft}</em>`;
+              } else { 
+                out += `<a class="btn btn-outline-secondary btn-sm float-end mt-1 mx-2 position-absolute" style="right:0;bottom:0.5rem" 
+                           title="${messageAnzeigen}" href="${baseURL}browse/attestations?used_source_object=${data.id}">
+                          <span class="float-end"><i class="fa-regular fa-file-lines"></i></span><span class="float-end pe-2 text-end" style="min-width:3.5em">${data.countAttestations}</span></a>`;
+              }
+            }
+            let messageNichtDatiert = /*[[#{demel.bibliography_form.javascript.sigle.dating.none}]]*/"";
+            out += `<h3 class="pt-2">${data.name}`;
+            if(data.datingDisplay!=null){
+              out += ` <small class="ps-3 text-muted text-nowrap">${data.datingDisplay == '' ? `<em>${messageNichtDatiert}</em>` : data.datingDisplay}</small>`;
+            }
+            out += `</h3>`;
+
+            let out2 = `<div id="source_line_${data.id}" class="demel-source_line collapse show" data-source-id="${data.id}" style="padding-right:5.5em">
+                          ${out}
+                        </div>
+                        <div id="source_info_${data.id}" class="collapse source-info" data-source-id="${data.id}">...</div>`;
+            return out2;
+          }},
+
+          //messages
+          { data: function (data, type, row, meta) {
+              let i18nBtnTitle = /*[[#{demel.parts.container_messages.button.toggle_messages}]]*/"";
+              return createMessagesAreaToggleButton(data.id, data.doctype, i18nBtnTitle, data.countMessagesPublished, data.countMessagesInreview, data.countMessages);
+          }},
+          { data: function (data, type, row, meta) {
+        	  let i18nTitle = /*[[#{demel.parts.container_messages.button.toggle_details}]]*/"";
+        	  return `<button type="button" class="demel-btn-show-detail btn btn-link btn-lg py-0 float-end" id="toggle_button_${data.id}" 
+                            data-source-id="${data.id}" data-bs-toggle="collapse" 
+                            data-bs-target="#source_info_${data.id}" title="${i18nTitle}"><i class="fa-regular fa-eye"></i></button>`
+          }}
+        ]
+      });
+
+      table.on('page.dt', function () {
+        //use Datatable plugin scrollToTop instead:  
+        //document.querySelector("main").scrollIntoView();
+      });
+
+      table.on('preDraw', function () {
+        hidePopovers();
+        closeAllDetails();
+      });
+
+      table.on('draw', function () {
+        createDownloadMenu();
+        initObjectInfo('source');
+        
+        // 'Quick and Dirty' delayed redraw if the first (and only) entry is displayed
+        // -> improve table layout 
+        if(document.querySelectorAll('.source-info').length == 1) {
+        	setTimeout(function() {
+        	  table.columns.adjust();
+        	}, 1000);
+        }
+        initPopovers();
+
+        if (table.data().count() ) {
+          document.getElementById('demel-no-data').classList.add('d-none');
+          document.getElementById('demel-show-data').classList.remove('d-none');
+          let i18n_show_all = {
+              'btn_title_show_all':  /*[[#{demel.bibliography.button.show_all}]]*/"",
+              'btn_title_close_all': /*[[#{demel.bibliography.button.close_all}]]*/"" };
+          let divTablePagination = document.getElementById('datatable_bibliography_paginate');
+          let pos = divTablePagination.style.display==="none" ? "afterend" : "beforeend"; 
+          divTablePagination.insertAdjacentHTML(pos, createButtonsShowAllCloseAll(divTablePagination.parentElement, i18n_show_all, 'fa-regular fa-eye', 'fa-regular fa-eye-slash'));
+        } else {
+          document.getElementById('demel-no-data').classList.remove('d-none');
+          document.getElementById('demel-show-data').classList.add('d-none');
+        }
+        
+        //show messages for deleted objects (simulated click on message button)
+        //table.context[0].nTable.querySelectorAll('tr').forEach((tr) => {
+        //  if(tr.classList.contains('demel-deleted-object') && tr.id.startsWith('tr_')){
+        //    document.querySelector('#button_messages_'+tr.id.substring(3)).click();
+        //  }
+        //});
+      });
+
+      //<!--/* processed on reload - additional data can be set on server response */-->
+      table.on('xhr', function () {
+        let json = table.ajax.json();
+        if(json) {
+          for(var f of json.facetType) {
+            document.getElementById('facet-type-'+f.value).innerText = f.valueCount;
+          }
+          for(var f of json.facetTexttypes) {
+            document.getElementById('facet-texttype-'+f.value).innerText = f.valueCount;
+          }
+          for(var f of json.facetLanguages) {
+            document.getElementById('facet-languages-'+f.value).innerText = f.valueCount;
+          }
+          for(var f of json.facetGenre) {
+            document.getElementById('facet-genre-'+f.value).innerText = f.valueCount;
+          }
+          for(var f of json.facetSubgenre) {
+            document.getElementById('facet-subgenre-'+f.value).innerText = f.valueCount;
+          }
+        }
+      });
+
+      table.on('click', 'td.demel-td-biblio', function (e) {
+        let trId = e.currentTarget.parentNode.id;
+        let id=trId.substring(3);
+        if(document.getElementById('source_line_'+id).classList.contains('show')) {
+          let btn = document.getElementById('toggle_button_'+trId.substring(3));
+          btn.click();
+        }
+      });
+    })
+
+    function createDownloadMenu() {
+      let i18nDownloadPopoverTitle = /*[[#{demel.bibliography_form.download.info.title}]]*/"";
+      let i18nDownloadPopoverContent = /*[[#{demel.bibliography_form.download.info.content}]]*/"";
+      document.querySelectorAll('.demel-download-menu').forEach(x => x.remove());
+      let html = `
+        <div class="demel-download-menu d-inline-block float-start pe-3">
+          <div class="dropdown d-inline-block">
+            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownDownload" 
+                    style="height:2.2em;"
+                    title="[(#{demel.common.download.button.title})]" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="fa-solid fa-download"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownDownload">
+              <li><a class="dropdown-item" href="#" onclick="demelDownload('csv');">[(#{demel.common.download.button.dropdown.csv})]</a></li>
+              <li><a class="dropdown-item" href="#" onclick="demelDownload('json');">[(#{demel.common.download.button.dropdown.json})]</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="#" onclick="demelDownload('url');">[(#{demel.common.download.button.dropdown.url})]</a></li>
+            </ul>
+          </div>
+          <div class="demel-popover-help-download d-inline-block text-dark" style="cursor:pointer;transform: translate(0px, -0.33rem);" data-object-type="source" data-bs-placement="left" 
+               data-bs-title="${i18nDownloadPopoverTitle}" 
+               data-bs-content="${i18nDownloadPopoverContent}" data-bs-toggle="popover-help"><i class="fa-regular fa-circle-question"></i>
+          </div>
+        </div>`;
+      document.querySelectorAll('.demel-with-download .dataTables_info').forEach(x => x.insertAdjacentHTML('afterbegin', html));
+      document.querySelectorAll('.demel-popover-help-download').forEach((x) => {
+        bootstrap.Popover.getOrCreateInstance(x, createPopoverHelpOptions());
+      });
+    }
+
+    function demelDownload(format) {
+      if(format ==='url'){
+        let url=`${window.location.origin}/browse/bibliography?${retrieveFormParams("#bibliography_form")}`;
+       	showBookmarkURL(url);	
+      } else {
+        //get first (and only) datatable api object on page, ignore visability state
+        let table = DataTable.tables( { api: true } ).eq(0);
+        let pageInfo = table.page.info();
+
+        let url = "../api/data/" + format + "/bibliography?" + retrieveFormParams("#bibliography_form");
+        url += "&start=" + pageInfo.start;
+
+        //Sort-URL-Parameter: &order[0][column]=2&order[0][dir]=desc
+        let order = table.order();
+
+        let idx = order[0][0];
+        url += "&order[0][column]=" + idx
+            + "&order[0][dir]=" + order[0][1]
+            + "&columns["+idx+"][name]=" + table.ajax.params().columns[idx].name;
+        window.open(url, '_download');
+      }
+    }
+
+    function createExtendedArea(id) {
+      if(document.querySelector('#tr2_'+id) == null) {
+        let newtr = `<tr id="tr2_${id}" class="${document.getElementById('tr_'+id).classList} collapse">
+                       <td class="px-4 py-0" colspan="5" id="container_messages_${id}"></td>
+                     </tr>`;
+        document.getElementById('tr_' + id).insertAdjacentHTML("afterend", newtr);
+      }
+      bootstrap.Collapse.getOrCreateInstance("#tr2_"+id).show();
+    }
+  </script>
+  <script th:replace="~{fragments/form :: bookmark_url_javascript}"></script>
+</body>
+</html>

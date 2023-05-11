@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<!--/*
+ * This file is part of the DEMel web application.
+ * 
+ * Copyright 2023
+ * DEMel project team, Rostock University, 18051 Rostock, Germany
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */-->
+ <html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+<title th:text="#{demel.error.title}">DEMel</title>
+<meta th:replace="~{fragments/page :: html_header}" />
+</head>
+<body class="ir-body">
+  <nav th:replace="~{fragments/page :: top_navigation}"></nav>
+  <header th:replace="~{fragments/page :: header (navActive='nav-main-home')}"></header>
+  <nav th:replace="~{fragments/page :: navigation (navActive='nav-main-home')}">...</nav>
+  <main class="ir-main container">
+    <h2 th:text="#{demel.error.heading}">Es ist ein Fehler aufgetreten...</h2>
+    <div class="row mt-3">
+      <div class="col-8 offset-2">
+        <div class="card">
+          <div class="card-header">
+            <h4 th:text="${error}">Error Info</h4>
+          </div>
+          <div class="card-body">
+            <p class="card-text" th:text="${message}">Error Info</p>
+          </div>
+          <div class="card-footer">
+            <table>
+              <tr th:if="${exception}">
+                <td><span th:text="#{demel.error.exception}"></span>:</td>
+                <td></td>
+                <!-- <td th:text="${response.exception}"></td> -->
+              </tr>
+              <tr>
+                <td><span th:text="#{demel.error.http_status_code}"></span>:&nbsp;&nbsp;&nbsp;</td>
+                <td></td>
+                <!-- <td th:text="${response.status}"></td> -->
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <footer th:replace="~{fragments/page :: footer}"></footer>
+  <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+</body>
+</html>

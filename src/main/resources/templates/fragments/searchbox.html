@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<!--/*
+ * This file is part of the DEMel web application.
+ * 
+ * Copyright 2023
+ * DEMel project team, Rostock University, 18051 Rostock, Germany
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */-->
+<html xmlns:th="http://www.thymeleaf.org">
+<div class="card card-secondary border border-secondary demel-searchbox" th:fragment="searchbox (name, formId)">
+  <div th:replace="~{fragments/form :: filter_card_header (name=${name}, form=${formId})}"></div>
+  <ul class="list-group list-group-flush border-0">
+    <li class="list-group-item ps-2 pe-0" th:each="s,stat: ${__${name}___objects}">
+      <button th:id="${'btndel_' + name + '_object_' + stat.index}"  class="float-end btn btn-sm btn-link text-secondary border-0" 
+              type="submit" name="action" th:value="${'del:' + name + '_object:'+s.id}">
+        <i class="fa-solid fa-trash-can"></i>
+      </button>
+      <button th:id="${'btnsubmit_' + name + '_object_' + stat.index}" class="d-none float-end btn btn-sm btn-primary" type="submit">
+        <i class="fa-solid fa-magnifying-glass"></i>
+      </button>
+      <small class="float-start text-dark mx-1 pt-1 pe-1"><i class="fa-solid fa-cube" th:title="#{demel.__${formId}__.filter.__${name}__.tooltip.object}+': '+${s.id}"></i></small>
+      <input th:id="${'input_' + '__${name}__'  + '_object_' + stat.index}" style="width: calc(100% - 4em);"  type="hidden"  
+             th:name="${name + '_object'}" th:value="${s.id}" />
+       <span th:id="${'span_' + name + '_object_' + stat.index}" th:utext="${s.htmlDisplay}"  style="width: calc(100% - 3.75em);display:inline-block"
+             th:onclick="@{'showSearchboxEditor_' + '__${name}__' + '(this);'}"></span>
+    </li>
+  </ul>
+  <ul class="list-group list-group-flush border-0">
+    <li class="list-group-item ps-2 pe-0" th:each="s,stat: ${__${name}___terms}">
+      <button th:id="${'btndel_' + name + '_term_' + stat.index}" class="float-end btn btn-sm btn-link text-secondary border border-0" 
+              type="submit" name="action" th:value="${'del:' + name + '_term:'+s}">
+        <i class="fa-solid fa-trash-can"></i>
+      </button>
+      <button th:id="${'btnsubmit_' + name + '_term_' + stat.index}" class="d-none float-end btn btn-sm btn-primary" type="submit">
+        <i class="fa-solid fa-magnifying-glass"></i>
+      </button>
+      <small class="float-start text-dark mx-1 pt-1 pe-1"><i class="fa-solid fa-font" th:title="#{demel.__${formId}__.filter.__${name}__.tooltip.term}"></i></small>
+      <input th:id="${'input_' + '__${name}__'  + '_term_' + stat.index}" style="width: calc(100% - 4em);"  type="hidden"  
+             th:name="${name + '_term'}" th:value="${s}" />
+       <span th:id="${'span_' + name + '_term_' + stat.index}" th:text="${s}" style="min-width: calc(100% - 3.75em);display:inline-block"
+             th:onclick="@{'showSearchboxEditor_' + '__${name}__' + '(this);'}"></span>
+    </li>
+  </ul>
+  <div class="card-footer bg-light ps-1 pe-2">
+    <input th:id="${'add_' + name + '_term'}" th:name="${'add_' + name + '_term'}" type="hidden" />
+    
+    <div class="input-group input-group-sm">
+      <span class="input-group-text bg-light" style="border:0px"><i class="fa-solid fa-plus"></i></span>
+    <!--/* TemplateProcessingException: Only variable expressions returning numbers or booleans 
+    are allowed in this context, any other datatypes are not trusted in the context of this expression, 
+    including Strings or any other object that could be rendered as a text literal. 
+    A typical case is HTML attributes for event handlers (e.g. "onload"), in which textual data 
+    from variables should better be output to "data-*" attributes and then read from the event handler. 
+    */-->
+    <select th:id="${'filter_' + name + '_id'}" th:name="${'add_' + name + '_object'}" class="form-control form-control-sm" style="display: inline-flex"></select>
+      <button class="btn btn-primary demel-searchbox-submitbutton" type="submit" 
+              th:id="${'submit_' + '__${name}__' + '_id'}" th:onclick="@{'submitText_' + '__${name}__' + '();'}">
+              <i class="fa-solid fa-magnifying-glass"></i></button>
+    </div>
+  </div>
+  
+<script type="text/javascript" th:inline="javascript">
+  function showSearchboxEditor_[(${name})](span){
+    span.classList.add("d-none");
+    let theID = span.getAttribute('id').replace("span_", "");
+    document.querySelector('button#btndel_'+ theID).classList.add("d-none");
+    document.querySelector('button#btnsubmit_'+ theID).classList.remove("d-none");
+
+    let input = document.querySelector('input#input_'+ theID);
+    input.setAttribute("type", "text");
+    input.select();
+  }
+
+  function submitText_[(${name})](){
+    let name = /*[[${name}]]*/"";
+
+    let e = document.querySelector("#filter_" + name + "_id");
+    let t = $(e).data('select2').results.lastParams.term;
+    if(t !== undefined){
+      document.querySelector("#add_" + name + "_term").value = t;
+    }
+    else{
+      document.querySelector("#add_" + name + "_term").value = "";
+    }
+  }
+
+  documentReady(function() {
+    let name = /*[[${name}]]*/"";
+    let formId = /*[[${formId}]]*/"";
+    let baseUrl = /*[[@{/api/searchbox/}]]*/""; 
+
+    let exact = false;
+    if(null != document.querySelector('input#input_search_exact_'+formId)) {
+      exact = document.querySelector('input#input_search_exact_'+formId).checked;
+    }
+    let s =  document.querySelector("#filter_" + name + "_id");
+    let s_select2 = $(s).select2({
+      width : 'calc(100% - 3.85em)',
+      dropdownCssClass: 'demel-select2-dropdown-'+name,
+      multiple: false,
+      maximumSelectionSize: 1,
+      dropdownAutoWidth:true,
+      ajax : {
+        url : baseUrl + name + '?exact='+exact, 
+        processResults : function(data) {
+          return {
+            results : data.response,
+          };
+        }, delay : 250, allowClear : false
+      },
+      escapeMarkup: function(markup) {
+        return markup;
+      }
+    });
+
+    s_select2.data('select2').$container.addClass("select2-" + name + "-dropdown");
+
+    $(s).on('select2:select', function (e) {
+      if(e.params.data.id.length>0){
+        //remove preset hidden input #add_lemma_term
+        document.querySelector("#add_" + name + "_term").value = "";
+      }
+      document.querySelector("#" + formId).submit();
+    });
+
+    $(s).on('select2:selecting', function (e) {
+      let t = $(s).data('select2').results.lastParams.term;
+      document.querySelector("#add_" + name + "_term").value = t;
+    });
+    
+    $(s).on('select2:open', () => {
+    	let c = document.querySelector('.demel-select2-dropdown-'+name);
+    	c.querySelector('.select2-search__field').focus();
+      });
+    
+  });
+</script>
+</div>
+</html>

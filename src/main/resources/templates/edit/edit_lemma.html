@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<!--/*
+ * This file is part of the DEMel web application.
+ * 
+ * Copyright 2023
+ * DEMel project team, Rostock University, 18051 Rostock, Germany
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */-->
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org"
+  xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+<title th:text="#{demel.lemma_editor.title}">Belegte Formen</title>
+<meta th:replace="~{fragments/page :: html_header}" />
+<style>
+div#row_source span.select2-selection {
+	height: 8em !important;
+}
+
+div#row_source span.select2-selection__rendered {
+	line-height: initial;
+}
+</style>
+</head>
+<body class="ir-body">
+  <nav th:replace="~{fragments/page :: top_navigation}"></nav>
+  <header th:replace="~{fragments/page :: header (navActive='nav-main-home')}"></header>
+  <nav th:replace="~{fragments/page :: navigation (navActive='nav-main-home')}">...</nav>
+  <main class="ir-main container" sec:authorize="hasRole('ROLE_EDITOR')">
+    <div class="row mb-4">
+      <div class="offset-1 col-10">
+        <form id="lemma_form" name="lemma_form" th:action="@{/edit/lemma}" th:object="${lemma_edit}" method="POST">
+          <input type="hidden" name="query_params" th:value="${query_params}" /> <input type="hidden" name="return_url"
+            th:value="${return_url}" /> <input type="hidden" th:field="*{id}" />
+          <div class="alert alert-danger"
+            th:if="${#lists.size(#fields.errors()) - #lists.size(#fields.globalErrors()) > 0}"
+            th:text="#{demel.common.editor.error.correct_input}">Bitte korrigieren Sie die fehlerhaften
+            Eingabefelder!</div>
+          <div class="card border border-primary">
+            <h4 class="card-header ">
+              <button type="button" th:title="#{demel.common.editor.button.close}" class="btn-close float-end"
+                aria-label="Close" onclick="window.location.href=document.lemma_form.return_url.value">&times;</button>
+              <span class="h3" th:text="${lemma_orig.typeSymbol}">Typesymbol</span> <span
+                th:text="#{demel.lemma_editor.headline}">Beleg bearbeiten</span> <span class="text-secondary">( <span
+                th:text="#{demel.lemma_editor.id}">ID:</span> <span th:text="*{id}">123456</span>, <span
+                th:text="#{demel.lemma_editor.type}">Typ:</span> <span
+                th:text="#{demel.vocabulary.lemma\_\_type.__${lemma_orig.type}__.term}">123456</span> )
+              </span>
+            </h4>
+            <div class="card-body" style="position: relative;">
+              <div class="pe-3 pb-3" style="position: absolute; right: 0; z-index: 1;">
+                <a sec:authorize="hasRole('ROLE_MANAGER')" th:href="@{/api/indexing/lemmas/reindex/__*{id}__}"
+                  class="btn btn-secondary p-1 float-end" th:title="#{demel.common.solr_update.button.title}"> <img
+                  th:src="@{/images/Apache_Solr_logo_white.svg}" style="height: 1.25em" /> <small
+                  th:text="#{demel.common.solr_update.button}">Update</small>
+                </a>
+              </div>
+
+              <div class="row mb-3" th:if="${#lists.contains(view_area, 'NAME')}">
+                <div class="col-2">
+                  <label th:replace="~{fragments/form :: form_label_with_info (i18nPrefix='demel.lemma_editor.name')}"></label>
+                </div>
+                <div class="col-4">
+                  <input class="form-control" type="text" id="input_form" th:field="*{name}" th:errorclass="is-invalid" />
+                  <span class="invalid-feedback" th:each="err : ${#fields.errors('name')}" th:text="#{__${err}__}"></span>
+                </div>
+                <div class="col-6">
+                  <div th:if="${#lists.contains(view_area, 'NAME')}">
+                    <span th:text="${lemma_orig.name}" class="text-muted pt-1"></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row mb-3" th:if="${#lists.contains(view_area, 'NAME_VARIANTS')}">
+                <div class="col-2">
+                  <label
+                    th:replace="~{fragments/form :: form_label_with_info (i18nPrefix='demel.lemma_editor.name_variants')}"></label>
+                </div>
+                <div class="col-4">
+                  <input class="form-control" type="text" id="input_name_variants" th:field="*{nameVariants}"
+                    th:errorclass="is-invalid" /> <span class="invalid-feedback"
+                    th:each="err : ${#fields.errors('nameVariants')}" th:text="#{__${err}__}"></span>
+                </div>
+                <div class="col-6">
+                  <span th:if="${lemma_orig.nameVariants}" th:text="${#strings.listJoin(lemma_orig.nameVariants,'|')}"
+                    class="text-muted"></span>
+                </div>
+              </div>
+
+
+              <div id="row_source" class="row mb-3" th:if="${#lists.contains(view_area, 'PART_OF_SPEECH')}">
+                <div class="col-2">
+                  <label
+                    th:replace="~{fragments/form :: form_label_with_info (i18nPrefix='demel.lemma_editor.part_of_speech')}"></label>
+                </div>
+                <div class="col-4">
+                  <select class="form-control form-control-sm" id="select_part_of_speech" multiple="multiple"
+                    th:field="*{partOfSpeech}" th:data-option-value="*{partOfSpeech}"
+                    th:data-option-html="${partOfSpeech_html_edit}" th:errorclass="is-invalid">
+                    <option
+                      th:each="partOfSpeech : ${T(de.uni.rostock.demel.data.model.dictionary.Lemma.PartOfSpeech).values()}"
+                      th:value="${partOfSpeech.value}"
+                      th:text="#{demel.vocabulary.lemma\_\_part_of_speech.__${partOfSpeech.value}__.term}"></option>
+                  </select> <span class="invalid-feedback" th:each="err : ${#fields.errors('partOfSpeech')}"
+                    th:text="#{__${err}__}"></span>
+                </div>
+                <div class="col-6">
+                  <div th:if="${lemma_orig.partOfSpeechs}">
+                    <ul class="text-muted" style="list-style-position: inside; padding: 0">
+                      <li th:each="pos : ${lemma_orig.partOfSpeechs}"
+                        th:text="#{demel.vocabulary.lemma\_\_part_of_speech.__${pos}__.term}"></li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row mb-3" th:if="${#lists.contains(view_area, 'HINTS_EXTERN')}">
+                <div class="col-2">
+                  <label
+                    th:replace="~{fragments/form :: form_label_with_info (i18nPrefix='demel.lemma_editor.hints_extern')}"></label>
+                </div>
+                <div class="col-4">
+                  <textarea rows="3" th:field="*{hintsExtern}" class="form-control" th:errorclass="is-invalid"></textarea>
+                  <span class="invalid-feedback" th:each="err : ${#fields.errors('hintsExtern')}"
+                    th:text="#{__${err}__}"></span>
+                </div>
+              </div>
+
+              <div class="row mb-3" th:if="${#lists.contains(view_area, 'HINTS_INTERN')}">
+                <div class="col-2">
+                  <label
+                    th:replace="~{fragments/form :: form_label_with_info (i18nPrefix='demel.lemma_editor.hints_intern')}"></label>
+                </div>
+                <div class="col-4">
+                  <textarea rows="3" th:field="*{hintsIntern}" class="form-control" th:errorclass="is-invalid"></textarea>
+                  <span class="invalid-feedback" th:each="err : ${#fields.errors('hintsIntern')}"
+                    th:text="#{__${err}__}"></span>
+                </div>
+              </div>
+              <div class="row mb-3">
+                <div class="col-2">
+                  <label
+                    th:replace="~{fragments/form :: form_label_with_info (i18nPrefix='demel.lemma_editor.revision_message')}"></label>
+                </div>
+                <div class="col-10">
+                  <textarea id="ta_revision_message" rows="3" name="revision_message" th:text="${revision_message}"
+                    class="form-control"></textarea>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-footer">
+              <div class="row">
+                <div class="col-sm-6">
+                  <button class="btn btn-dark" type="reset">
+                    <i class="fa-solid fa-eraser"></i> <span th:text="#{demel.common.editor.button.reset_form}">Formular
+                      zurücksetzen</span>
+                  </button>
+                </div>
+                <div class="col-sm-6 text-end">
+                  <button id="submit_button" class="btn btn-primary float-end" type="submit"
+                    th:text="#{demel.common.editor.button.save}">Speichern</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+  <footer th:replace="~{fragments/page :: footer}"></footer>
+  <script th:replace="~{fragments/page :: script_footer}"></script>
+
+  <!-- /* Elevate Zoom (Image viewer) */-->
+  <!-- /*
+  <script th:src="@{/javascript/jquery.ez-plus-1.1.20.js}"></script>
+  */-->
+  <script th:src="@{/javascript/elevatezoom-plus_1.2.5/jquery.ez-plus.min.js}"></script>
+  <script type="text/javascript" th:inline="javascript">
+    documentReady(function() {
+      initPopovers();
+
+      document.getElementById('lemma_form').onsubmit = (evt) => {
+        let c = trimTinyMCEContent(tinymce.get("ta_revision_message").getContent());
+        tinymce.get("ta_revision_message").setContent(c);
+        document.querySelector("textarea#ta_revision_message").value = c;
+        document.getElementById("submit_button").disabled = true;
+        document.getElementById("submit_button").textContent = /*[[#{demel.common.form.submit.wait}]]*/"";
+     };
+
+      document.querySelector("#lemma_form").onreset = (evt) => {
+        document.querySelectorAll('#select_part_of_speech').forEach((s) => {
+          s.querySelectorAll('option').forEach((o) => {
+            o.selected = o.defaultSelected;
+          });
+          $(s).trigger('change.select2');
+        });
+     };
+
+     $("#select_part_of_speech").select2();
+      
+     initTinyMCERevisionMessage("ta_revision_message");
+    });
+  </script>
+</body>
+</html>
